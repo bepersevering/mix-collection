@@ -58,10 +58,10 @@ typedef struct {
 } fd_status_t;
 
 // These constants make creating fd_status_t values less verbose.
-const fd_status_t FT_STATUS_R = {.want_read = true, .want_write = false};
-const fd_status_t FT_STATUS_W = {.want_read = false, .want_write = true};
-const fd_status_t FT_STATUS_RW = {.want_read = true, .want_write = true};
-const fd_status_t FT_STATUS_NO_RW = {.want_read = false, .want_write = false};
+const fd_status_t FD_STATUS_R = {.want_read = true, .want_write = false};
+const fd_status_t FD_STATUS_W = {.want_read = false, .want_write = true};
+const fd_status_t FD_STATUS_RW = {.want_read = true, .want_write = true};
+const fd_status_t FD_STATUS_NO_RW = {.want_read = false, .want_write = false};
 
 
 fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
@@ -77,7 +77,7 @@ fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
   peerstate->sendbuf_end = 1;
 
   // Signal that this socket is ready for writing now.
-  return fd_status_W;
+  return FD_STATUS_W;
 }
 
 fd_status_t on_peer_ready_recv(int sockfd) {
@@ -89,18 +89,18 @@ fd_status_t on_peer_ready_recv(int sockfd) {
     // Until the initial ACK has been sent to the peer, there's nothing we
     // want to receive. Also, wait until all data staged for sending is sent to
     // receive more data.
-    return fd_status_W;
+    return FD_STATUS_W;
   }
 
   uint8_t buf[1024];
   int nbytes = recv(sockfd, buf, sizeof buf, 0);
   if (nbytes == 0) {
     // The peer disconnected.
-    return fd_status_NORW;
+    return FD_STATUS_NORW;
   } else if (nbytes < 0) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
       // The socket is not *really* ready for recv; wait until it is.
-      return fd_status_R;
+      return FD_STATUS_R;
     } else {
       perror_die("recv");
     }
@@ -139,20 +139,20 @@ fd_status_t on_peer_ready_send(int sockfd) {
 
   if (peerstate->sendptr >= peerstate->sendbuf_end) {
     // Nothing to send.
-    return fd_status_RW;
+    return FD_STATUS_RW;
   }
   int sendlen = peerstate->sendbuf_end - peerstate->sendptr;
   int nsent = send(sockfd, &peerstate->sendbuf[peerstate->sendptr], sendlen, 0);
   if (nsent == -1) {
     if (errno == EAGAIN || errno == EWOULDBLOCK) {
-      return fd_status_W;
+      return FD_STATUS_W;
     } else {
       perror_die("send");
     }
   }
   if (nsent < sendlen) {
     peerstate->sendptr += nsent;
-    return fd_status_W;
+    return FD_STATUS_W;
   } else {
     // Everything was sent successfully; reset the send queue.
     peerstate->sendptr = 0;
@@ -163,7 +163,7 @@ fd_status_t on_peer_ready_send(int sockfd) {
       peerstate->state = WAIT_FOR_MSG;
     }
 
-    return fd_status_R;
+    return FD_STATUS_R;
   }
 }
 
