@@ -61,7 +61,7 @@ typedef struct {
 const fd_status_t FD_STATUS_R = {.want_read = true, .want_write = false};
 const fd_status_t FD_STATUS_W = {.want_read = false, .want_write = true};
 const fd_status_t FD_STATUS_RW = {.want_read = true, .want_write = true};
-const fd_status_t FD_STATUS_NO_RW = {.want_read = false, .want_write = false};
+const fd_status_t FD_STATUS_NORW = {.want_read = false, .want_write = false};
 
 
 fd_status_t on_peer_connected(int sockfd, const struct sockaddr_in* peer_addr,
