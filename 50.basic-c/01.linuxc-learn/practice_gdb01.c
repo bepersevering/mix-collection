@@ -1,9 +1,9 @@
 #include <stdio.h>
 
 int add_range(int low, int high) {
-  int i, sum;
+  int i, sum = 0;
   for (i = low; i <= high; i++) {
-    sum = sum + i;
+       sum = sum + i;
   }
   return sum;
 }
