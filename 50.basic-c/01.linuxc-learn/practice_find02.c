@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 
 void genRandom(int array[], int size) {
@@ -30,7 +31,7 @@ int main(void) {
   
   int n = 20, min;
   int array[20] = {};
-
+  srand(time(NULL));
   genRandom(array, n);
 
   printArray(array, n);
