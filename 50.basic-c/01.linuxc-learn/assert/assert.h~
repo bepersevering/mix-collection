@@ -1,0 +1,11 @@
+
+/* remove existing definition */
+#undef assert
+
+#ifdef NDEBUG
+  #define assert(test) ((void)0)
+#else
+/* NDEBUG not defined */
+void _Assert(char *);
+/* micros */
+#define _STR(
