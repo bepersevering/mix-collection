@@ -19,6 +19,6 @@ int main(void) {
   // }
 
   int **pa = &a[0];
-
+  
   return 0;
 }
