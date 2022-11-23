@@ -10,15 +10,13 @@ int main(void) {
     }
   }
 
-  int *a[10] = data[0][10];
+  int *a[10] = {};
 
-  // int *a[10] = {};
+  //  for (i = 0; i < 10; i++) {
+  //  *a[i] = data[i][0];
+  //}
 
-  // for (i = 0; i< 10; i++) {
-	// *a[i] = data[i][10];
-  // }
 
-  int **pa = &a[0];
   
   return 0;
 }
