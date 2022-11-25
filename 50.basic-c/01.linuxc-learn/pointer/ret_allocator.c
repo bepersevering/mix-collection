@@ -1,23 +1,22 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include "ret_allocator.h"
 
-#include "para_allocator.h"
-
-void alloc_unit(unit_t **pp) {
+unit_t *alloc_unit(void){
 	unit_t *p = malloc(sizeof(unit_t));
 	if (p == NULL) {
 		printf("out of memory\n");
+		exit(1);
 	}
+
 	p->number = 3;
 	p->msg = malloc(20);
-
-	strcpy(p->msg, "Hello world");
-
-	*pp = p;
+	strcpy(p->msg, "hello world");
+	return p;
 }
 
 void free_unit(unit_t *p) {
-	free(p->msg);
-	free(p);
+  free(p->msg);
+  free(p);
 }
