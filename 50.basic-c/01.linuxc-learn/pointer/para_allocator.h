@@ -6,7 +6,7 @@ typedef struct {
   char *msg;
 } unit_t;
 
-extern void alloc_unit(unit **);
-extern void free_unit(unit *);
+extern unit_t * alloc_unit(void);
+extern void free_unit(unit_t *);
 
 #endif
