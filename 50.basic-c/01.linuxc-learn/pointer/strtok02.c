@@ -23,10 +23,10 @@ char *my_strtok(char *str, const char *delim) {
   static char *backup;
   
   // check str is NULL
-  if (*str) {
-    backup = str;
-  } else {
+  if (str == NULL) {
     str = backup;
+  } else {
+    backup = str;
   }
   
   if (!(*str)) {
