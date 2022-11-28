@@ -2,7 +2,8 @@
 #include <string.h>
 
 int main(void) {
-  char str[] = "root:x::0:root:/root:/bin/bash:";
+  // char str[] = "root:x::0:root:/root:/bin/bash:";
+  char str[] = "root";
   char *token;
 
   token = strtok(str, ":");
