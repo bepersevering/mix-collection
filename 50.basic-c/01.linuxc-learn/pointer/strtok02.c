@@ -46,16 +46,18 @@ char *my_strtok(char *str, const char *delim) {
 
   char *ret = str;
   while (1) {
-    if (match_delim(*str, delim)) {
-      *str = '\0';
-      backup = str + 1;
+    if (*str == '\0') {
+      backup = str;
       return ret;
     }
-    if (*str == '\0') {
-      return NULL;
+    
+    if (match_delim(*str, delim)) {
+      backup = str + 1;
+      *str = '\0';
+      return ret;
     }
 
-    *delim++;
+    str++;
   }
 
   return NULL;
