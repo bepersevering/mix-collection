@@ -14,8 +14,9 @@ void test(char *url) {
   char *token2;
   printf("the url path = [%s]", token);
 
-  while ((token1 = strtok_r(backup, delim2, &saveptr)) != NULL) {
-    token2 = strtok_r(token1, delim3, &saveptr1);
+  while ((token1 = strtok_r(backup, delim2, saveptr)) != NULL) {
+    saveptr1 = &(token1);
+    token2 = strtok_r(token1, delim3, saveptr1);
     printf("key = [%s], ", token2);
     token2 = strtok_r(token1, delim3, &saveptr1);
     printf("value = [%s]\n", token2);
