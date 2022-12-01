@@ -8,18 +8,16 @@ void test(char *url) {
   char *delim2 = "&";
   char *delim3 = "=";
   
-  char **saveptr = &(backup);
-  char *token = strtok_r(backup, delim1, saveptr);
+  char *saveptr, *saveptr1;
+  char *token = strtok_r(backup, delim1, &saveptr);
   char *token1;
   char *token2;
-  char **saveptr1 ;
   printf("the url path = [%s]", token);
 
-  while ((token1 = strtok_r(backup, delim2, saveptr)) != NULL) {
-    **saveptr1 = &(token1);
-    token2 = strtok_r(token1, delim3, saveptr1);
+  while ((token1 = strtok_r(backup, delim2, &saveptr)) != NULL) {
+    token2 = strtok_r(token1, delim3, &saveptr1);
     printf("key = [%s], ", token2);
-    token2 = strtok_r(token1, delim3, saveptr1);
+    token2 = strtok_r(token1, delim3, &saveptr1);
     printf("value = [%s]\n", token2);
   }
   
