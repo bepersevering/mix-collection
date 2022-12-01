@@ -8,12 +8,12 @@ int main(void){
   char str1[] = "a/bbb///cc;xxx:yyy:";
   const char *delim = ":;";
   char *saveptr;
-  char *token = strtok_r(str1, delim, &saveptr);
+  char *token = strtok_r(str, delim, &saveptr);
 
   printf("%s\n", token);
   while ((token = strtok_r(str, delim, &saveptr)) != NULL) {
     printf("%s\n", token);
   }
-
+  
   return 0;
 }
