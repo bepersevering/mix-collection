@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <errno.h>
+
 
 int main(void) {
   int a = 10, b;
