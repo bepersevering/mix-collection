@@ -6,13 +6,13 @@
 void copy(char *file1, char *file2) {
   FILE *fp1 = fopen(file1, "r");
   if (fp1 == NULL) {
-    perror(strcat("Open file ", file1));
+    perror("Open file ");
     exit(1);
   }
   
   FILE *fp2 = fopen(file2, "w+");
   if (fp2 == NULL) {
-    perror(strcat("Open file ", file2));
+    perror("Open file ");
     exit(1);
   }
 
@@ -26,6 +26,7 @@ void copy(char *file1, char *file2) {
 }
 
 int main(void) {
-  copy("testfile1", "testfile2");
+  copy("testfile1.txt", "testfile2.txt");
   return 0;
+
 }
