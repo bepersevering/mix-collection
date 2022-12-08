@@ -12,7 +12,7 @@ int main(void) {
   p = make_node(90);
   insert(p);
   p = search(5);
-  delete (p);
+  delete(p);
   free_node(p);
   traverse(print_item);
   destroy();

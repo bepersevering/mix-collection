@@ -1,13 +1,11 @@
 all: main.o
 
-main.o: doublelinkedlist_main.o doublelinkedlist.o 
+main.o: doublelinkedlist_main.c doublelinkedlist.c doublelinkedlist.h
 	gcc -g -Wall $^ -o $@
-doublelinkedlist_main.o: doublelinkedlist.h
-doublelinkedlist.o: doublelinkedlist.h
 
 clean:
 	@echo "cleaning project"
-	-rm main *.o
+	-rm main.o
 	@echo "clean completed"
 
 .PHONY: clean

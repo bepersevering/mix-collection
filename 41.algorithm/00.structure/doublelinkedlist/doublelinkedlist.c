@@ -11,6 +11,7 @@ static link tail = &tailsentinel;
 
 link make_node(unsigned char item) {
   link p = malloc(sizeof (*p));
+  p->item = item;
   p->prev = p->next = NULL;
   return p;
 }
@@ -36,9 +37,10 @@ void insert(link p) {
   head->next = p;
 }
 void delete(link p) {
-  p->prev->next = p->next;
   p->next->prev = p->prev;
+  p->prev->next = p->next;
 }
+
 void traverse(void (*visit)(link)) {
   link p;
   for (p = head->next; p != tail; p = p->next) {
