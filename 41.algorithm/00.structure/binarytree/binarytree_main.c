@@ -2,7 +2,7 @@
 #include "binarytree.h"
 
 void print_item(link p) {
-  printf("%d\n", p->item);
+  printf("%d\t", p->item);
 }
 
 int main(void) {

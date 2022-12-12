@@ -18,10 +18,10 @@ link init(unsigned char VLR[], unsigned char LVR[], int n) {
   if (n <= 0) {
     return NULL;
   }
-  for (k = 0; VLR[0] != LVR[k]; k++) {
-    t = make_node(VLR[0]);
+  for (k = 0; VLR[0] != LVR[k];k++) {
   }
-  t->left = init(VLR+1, VLR, k);
+  t = make_node(VLR[0]);
+  t->left = init(VLR+1, LVR, k);
   t->right = init(VLR+1+k, LVR+1+k, n-k-1);
   return t;
 }
