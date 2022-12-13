@@ -20,8 +20,8 @@ link init(unsigned char VLR[], unsigned char LVR[], int n) {
   }
 
   // find root in LVR
-  for (k = 0; VLR[k] != LVR[K]; k++) {
-
+  for (k = 0; VLR[0] != LVR[k]; k++) {
+    
   }
 
   t = make_node(VLR[0]);
@@ -62,7 +62,7 @@ int count(link t) {
   if (!t) {
     return 0;
   }
-  return 1 + pre_order(t->left) + pre_order(t->right);
+  return 1 + count(t->left) + count(t->right);
 }
 
 int depth(link t) {
