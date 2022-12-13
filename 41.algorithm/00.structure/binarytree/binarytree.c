@@ -1,15 +1,15 @@
 #include <stdlib.h>
 #include "binarytree.h"
 
-static link make_node(unsigned char item) {
+link make_node(unsigned char item) {
   link p = malloc(sizeof *p);
   p->item = item;
   p->left = p->right = NULL;
   return p;
 }
 
-static void free_node(link p) {
-  free(p);
+void free_node(link t) {
+  free(t);
 }
 
 link init(unsigned char VLR[], unsigned char LVR[], int n) {
@@ -18,15 +18,20 @@ link init(unsigned char VLR[], unsigned char LVR[], int n) {
   if (n <= 0) {
     return NULL;
   }
-  for (k = 0; VLR[0] != LVR[k];k++) {
+
+  // find root in LVR
+  for (k = 0; VLR[k] != LVR[K]; k++) {
+
   }
+
   t = make_node(VLR[0]);
-  t->left = init(VLR+1, LVR, k);
-  t->right = init(VLR+1+k, LVR+1+k, n-k-1);
+  t->left = init(VLR + 1, LVR, n - k -1);
+  t->right = init(VLR + k + 1, LVR + k + 1, n - k - 1);
   return t;
 }
+
 void pre_order(link t, void (*visit)(link)) {
-  if (!t) {
+  if (t == NULL) {
     return;
   }
   visit(t);
@@ -35,16 +40,17 @@ void pre_order(link t, void (*visit)(link)) {
 }
 
 void in_order(link t, void (*visit)(link)) {
-  if (!t) {
+  if (t == NULL) {
     return;
   }
+  
   in_order(t->left, visit);
   visit(t);
   in_order(t->right, visit);
 }
 
-void post_order(link t, void (*visit)(link)) {
-  if (!t) {
+void post_order(link t, void (*visit)(link)){
+  if (t == NULL) {
     return;
   }
   post_order(t->left, visit);
@@ -56,17 +62,17 @@ int count(link t) {
   if (!t) {
     return 0;
   }
-  return 1 + count(t->left) + count(t->right);
+  return 1 + pre_order(t->left) + pre_order(t->right);
 }
 
 int depth(link t) {
-  int dl, dr;
   if (!t) {
     return 0;
   }
-  dl = depth(t->left);
-  dr = depth(t->right);
-  return 1+ (dl > dr ? dl : dr);
+  int leftDepth = 1 + depth(t->left);
+  int rightDepth = 1 + depth(t->right);
+
+  return leftDepth > rightDepth ? leftDepth : rightDepth;
 }
 
 void destroy(link t) {
