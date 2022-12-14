@@ -3,13 +3,13 @@
 
 typedef struct node *link;
 struct node {
-  unsigned char item;
+  unsigned int item;
   link left, right;
 };
 
-link search(link t, unsigned char key);
-link insert(link t, unsigned char key);
-link delete(link t, unsigned char key);
+link search(link t, unsigned int key);
+link insert(link t, unsigned int key);
+link delete(link t, unsigned int key);
 void print_tree(link t);
   
 
