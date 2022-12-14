@@ -34,7 +34,7 @@ link insert(link t, unsigned int key) {
         return make_node(key);
     }
 
-    if (t->item > key) {
+    if (t->item < key) {
         t->right = insert(t->right, key);
     }
     else {
