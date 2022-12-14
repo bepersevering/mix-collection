@@ -26,7 +26,7 @@ int main(void) {
         key = rand() % RANGE;
         if (search(root, key)) {
             printf("delete %d in tree\n", key);
-            root = delete(t, key);
+            root = delete(root, key);
             printf("\t\\tree");
             print_tree(root);
             printf("\n\n");

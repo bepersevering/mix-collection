@@ -27,6 +27,7 @@ link search(link t, unsigned char key) {
     if (t->item > key) {
         return search(t->right, key);
     }
+    return NULL;
 }
 
 link insert(link t, unsigned char key) {
