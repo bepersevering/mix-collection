@@ -4,7 +4,7 @@ msg:
     .ascii  "Hello World!\n"        # our dear string 
     len = . - msg                   # length of our dear string
 
-.txt                                # section declaration
+.text                                # section declaration
                                     # we must export the entry point to the ELF linker or
 .global _start                      # loader. They conventionally recognize _start as their
                                     # entry point. Use ld -e foo to verride the default.
