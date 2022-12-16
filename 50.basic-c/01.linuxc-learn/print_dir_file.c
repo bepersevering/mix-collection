@@ -6,3 +6,70 @@
 #include <string.h>
 
 #define MAX_PATH 1024
+
+/**
+ * @brief apply fcn to all files in dir
+ * 
+ * @param dir 
+ * @param fcn 
+ */
+void dirwalk(char *dir, void (*fcn)(char *)) {
+  char name[MAX_PATH];
+  struct dirent *dp;
+  DIR *dfd;
+
+  if ((dfd = opendir(dir)) == NULL) {
+    fprintf(stderr, "dirwalk: can't open %s\n", dir);
+    return;
+  }
+  while ((dp = readdir(dfd)) != NULL) {
+    if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0) {
+      // skip self and parent
+      continue;
+    }
+    if (strlen(dir) + strlen(dp->d_name) + 2 > sizeof(name)) {
+      fprintf(stderr, "dirwalk: name %s%s too long\n", dir, dp->d_name);
+    } else {
+      sprintf(name, "%s/%s", dir, dp->d_name);
+      (*fcn)(name);
+    }
+  }
+  closedir(dfd);
+}
+
+/**
+ * @brief print the size and name of file "name"
+ * 
+ * @param name 
+ */
+void fsize(char *name) {
+  struct stat stbuf;
+  if (stat(name, &stbuf) == -1) {
+    fprintf(stderr, "fsize: can't access %s\n", name);
+    return;
+  }
+
+  if ((stbuf.st_mode & S_IFMT) == S_IFDIR) {
+    dirwalk(name, fsize);
+  }
+  printf("%8ld %s\n", stbuf.st_size, name);
+}
+
+int main(int argc, char **argv){
+  if (argc == 1) {
+    // default: current directory
+    fsize(".");
+  } else {
+    while(--argc > 0) {
+      fsize(*++argv);
+    }
+  }
+
+  return 0;
+}
+
+
+
+
+
+
