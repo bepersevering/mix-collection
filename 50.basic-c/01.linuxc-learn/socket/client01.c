@@ -36,7 +36,7 @@ int main(int argc, const char * argv[]) {
     printf("connect to server\n");
 
     len = recv(client_sockfd, buf, BUFSIZ, 0);
-    buf[len] = '/0';
+    buf[len] = '\0';
     printf("%s", buf);
 
     while(1) {
@@ -48,7 +48,7 @@ int main(int argc, const char * argv[]) {
 
         len = send(client_sockfd, buf, strlen(buf), 0);
         len = recv(client_sockfd, buf, BUFSIZ, 0);
-        buf[len] = '/0';
+        buf[len] = '\0';
         printf("received: %s\n", buf);
     }
     
