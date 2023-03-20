@@ -56,3 +56,5 @@ dkms.conf
 *.o.dSYM
 *.c~
 .vs
+*.class
+*.jasm*
