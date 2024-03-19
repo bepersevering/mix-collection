@@ -1,0 +1,21 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+MAXLINE	./lib/unp.h	14;"	d
+MAXLINE	./tcpcliserv/tcpserv01.c	11;"	d	file:
+SERV_PORT	./tcpcliserv/tcpserv01.c	10;"	d	file:
+__unp_h	./lib/unp.h	4;"	d
+daemon_proc	./lib/error.c	/^int daemon_proc; \/* set nonzero by daemon_init() *\/$/;"	v
+err_doit	./lib/error.c	/^static void err_doit(int errnoflag, int level, const char *fmt, va_list ap) {$/;"	f	file:
+err_msg	./lib/error.c	/^void err_msg(const char *fmt, ...) {$/;"	f
+err_quit	./lib/error.c	/^void err_quit(const char *fmt, ...) {}$/;"	f
+err_ret	./lib/error.c	/^void err_ret(const char *fmt, ...) {}$/;"	f
+handle_error	./tcpcliserv/tcpserv01.c	13;"	d	file:
+main	./intro/byteorder.c	/^int main(int argc, char **argv) {$/;"	f
+main	./intro/daytimetcpcli.c	/^int main(int argc, char **argv) {$/;"	f
+main	./tcpcliserv/tcpcli01.c	/^int main(int argv, char **argv) {$/;"	f
+main	./tcpcliserv/tcpserv01.c	/^int main(int argc, char **argv) {$/;"	f
+str_echo	./tcpcliserv/tcpserv01.c	/^void str_echo(int connfd) {$/;"	f
