@@ -39,7 +39,9 @@ int main(int argc, char **argv) {
   servaddr.sin_port = htons(SERV_PORT);
 
   // bind
-  bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+  if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) {
+    
+  }
 
   // listen
   listen(listenfd, LISTENQ);
@@ -61,7 +63,51 @@ int main(int argc, char **argv) {
       // new client connection
       connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
       for (i = 0; i < FD_SETSIZE; i++) {
-        
+        if (client[i] < 0) {
+          // save descriptor
+          client[i] =  connfd;
+          break;
+        }
+
+        if (i == FD_SETSIZE) {
+          perror("too many clients");
+          exit(1);
+        }
+
+        // add new descriptor to set
+        FD_SET(connfd, &allset);
+        if (connfd > maxfd) {
+          // for select
+          maxfd = connfd;
+        }
+
+        if (i > maxi) {
+          // max index in client[] array
+          maxi = i;
+        }
+      }
+
+      for (i = 0; i < maxi; i++) {
+        // check all clients for data
+        if ((sockfd = client[i]) < 0) {
+          continue;
+        }
+
+        if (FD_ISSET(sockfd, &rset)) {
+          if ((n = read(sockfd, buf, MAXLINE)) == 0) {
+            // connection closed by client
+            close(sockfd);
+            FD_CLR(sockfd, &allset);
+            client[i] = -1;
+          } else {
+            write(sockfd, buf, n);
+          }
+
+          if (--nready <= 0) {
+            // no more readable descriptor
+            break;
+          }
+        }
       }
     }
   }
