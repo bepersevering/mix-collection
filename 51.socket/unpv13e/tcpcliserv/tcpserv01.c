@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#define SERV_PORT 8099
+#define SERV_PORT 9099
 #define MAXLINE 4096
 #define LISTENQ 1024
 

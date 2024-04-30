@@ -39,10 +39,8 @@ int main(int argc, char **argv) {
   servaddr.sin_port = htons(SERV_PORT);
 
   // bind
-  if (bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr))) {
-    
-  }
-
+  bind(listenfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+  
   // listen
   listen(listenfd, LISTENQ);
 

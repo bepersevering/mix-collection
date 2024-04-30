@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#define SERV_PORT 9011
+#define SERV_PORT 9099
 #define LISTENQ 1024
 #define MAXLINE 4096
 
