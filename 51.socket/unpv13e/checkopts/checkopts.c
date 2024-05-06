@@ -1,5 +1,12 @@
-
-#include <asm-generic/socket.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <error.h>
+#include <unistd.h>
 #include <netinet/in.h>
 union val {
   int				i_val;
@@ -12,6 +19,8 @@ static char	*sock_str_flag(union val *, int);
 static char	*sock_str_int(union val *, int);
 static char	*sock_str_linger(union val *, int);
 static char	*sock_str_timeval(union val *, int);
+
+static char strres[128];
 
 struct sock_opts {
   const char	   *opt_str;
@@ -39,7 +48,7 @@ struct sock_opts {
 	{ "SO_REUSEPORT",		0,			0,				NULL },
 #endif
 	{ "SO_TYPE",			SOL_SOCKET,	SO_TYPE,		sock_str_int },
-	{ "SO_USELOOPBACK",		SOL_SOCKET,	SO_USELOOPBACK,	sock_str_flag },
+	// { "SO_USELOOPBACK",		SOL_SOCKET,	SO_USELOOPBACK,	sock_str_flag },
 	{ "IP_TOS",				IPPROTO_IP,	IP_TOS,			sock_str_int },
 	{ "IP_TTL",				IPPROTO_IP,	IP_TTL,			sock_str_int },
 #ifdef	IPV6_DONTFRAG
@@ -57,8 +66,8 @@ struct sock_opts {
 #else
 	{ "IPV6_V6ONLY",		0,			0,				NULL },
 #endif
-	{ "TCP_MAXSEG",			IPPROTO_TCP,TCP_MAXSEG,		sock_str_int },
-	{ "TCP_NODELAY",		IPPROTO_TCP,TCP_NODELAY,	sock_str_flag },
+	// { "TCP_MAXSEG",			IPPROTO_TCP,TCP_MAXSEG,		sock_str_int },
+	// { "TCP_NODELAY",		IPPROTO_TCP,TCP_NODELAY,	sock_str_flag },
 #ifdef	SCTP_AUTOCLOSE
 	{ "SCTP_AUTOCLOSE",		IPPROTO_SCTP,SCTP_AUTOCLOSE,sock_str_int },
 #else
@@ -89,7 +98,7 @@ int main(int argc, char **argv) {
   socklen_t len;
   struct sock_opts *ptr;
 
-  for (ptr = sock_opts; ptr->opt_str != NULL, ptr++) {
+  for (ptr = sock_opts; ptr->opt_str != NULL; ptr++) {
     printf("%s, ", ptr->opt_str);
     if (ptr->opt_val_str == NULL) {
       printf("(undefined)\n");
@@ -111,12 +120,13 @@ int main(int argc, char **argv) {
           break;
 #endif
         default:
-          perror("cannot create fd for level %d\n", ptr->opt_level);
+          printf("cannot create fd for level %d\n", ptr->opt_level);
       }
 
       len = sizeof(val);
       if (getsockopt(fd, ptr->opt_level, ptr->opt_name, &val, &len) == -1) {
         perror("getsockopt error");
+        exit(1);
       } else {
         printf("default = %s\n", (*ptr->opt_val_str)(&val, len));
       }
@@ -127,4 +137,45 @@ int main(int argc, char **argv) {
   exit(0);
 }
 
+
+static char	*sock_str_flag(union val *ptr, int len) {
+  if (len != sizeof(int)) {
+    snprintf(
+      strres, sizeof(strres), "Size (%d) not sizeof(int)", len);
+  } else {
+    snprintf(strres, sizeof(strres), "%s", (ptr->i_val == 0) ? "off" : "on");
+  }
+  return (strres);
+}
+
+static char	*sock_str_int(union val *ptr, int len) {
+  if (len != sizeof(int)) {
+    snprintf(
+      strres, sizeof(strres), "Size (%d) not sizeof(int)", len);
+  } else {
+    snprintf(strres, sizeof(strres), "%d", ptr->i_val);
+  }
+  return (strres);
+}
+
+static char	*sock_str_linger(union val *ptr, int len) {
+  if (len != sizeof(int)) {
+    snprintf(
+      strres, sizeof(strres), "Size (%d) not sizeof(int)", len);
+  } else {
+      snprintf(strres, sizeof(strres), "%s", (ptr->linger_val.l_onoff == 0) ? "off" : "on");
+  }
+  return (strres);
+
+}
+static char	*sock_str_timeval(union val *ptr, int len) {
+  if (len != sizeof(int)) {
+    snprintf(
+      strres, sizeof(strres), "Size (%d) not sizeof(int)", len);
+  } else {
+    snprintf(strres, sizeof(strres), "%ld.%06ld", (long) ptr->timeval_val.tv_sec, (long) ptr->timeval_val.tv_usec);
+  }
+  return (strres);
+
+}
 
