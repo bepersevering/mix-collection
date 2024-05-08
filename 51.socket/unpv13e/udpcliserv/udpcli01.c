@@ -62,8 +62,8 @@ void dg_cli(FILE *fp, int sockfd, struct sockaddr * servaddr, socklen_t servlen)
     }
 
     // null terminate
-    recvline[n] = '\0';    
-
+    recvline[n] = '\0';
+    
     fputs(recvline, stdout);
   }
 }
