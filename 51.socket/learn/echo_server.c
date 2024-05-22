@@ -44,4 +44,26 @@ int main(int argc, char **argv) {
   
   clilen = sizeof(cliaddr);
 
+  for (i = 0; i < 5; i++) {
+    client_sock = accept(serv_sock, (struct sockaddr *)&cliaddr, &clilen);
+    if (client_sock == -1) {
+      error_handling("accept() error");
+    } else {
+      printf("Connected client %d \n", i+1);
+    }
+
+    while((str_len = read(client_sock, msg, BUF_SIZE)) != 0) {
+      write(client_sock, msg, str_len);
+    }
+    close(client_sock);
+  }
+
+  close(serv_sock);
+  return 0;
+}
+
+void error_handling(char *msg) {
+  fputs(msg, stderr);
+  fputc('\n', stderr);
+  exit(1);
 }
