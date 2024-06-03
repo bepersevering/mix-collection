@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
 
   socklen_t addrsize;
   int fd_max, str_len, fd_num, i;
+  char buf[BUF_SIZE];
 
   if (argc !=2) {
     printf("Usage : %s\n", argv[0]);
@@ -49,15 +50,44 @@ int main(int argc, char **argv) {
     timeout.tv_sec = 5;
     timeout.tv_usec = 5000;
 
-    fi ((fd_num = select(fd_max + 1, &cpy_reads, 0, 0, &timeout)) == -1) {
+    if ((fd_num = select(fd_max + 1, &cpy_reads, 0, 0, &timeout)) == -1) {
       break;
     }
+    if (fd_num == 0) {
+      continue;
+    }
+    for (i = 0; i < fd_num; i++) {
+      if (FD_ISSET(i, &cpy_reads)) {
+        if (i == serv_sock) {
+          addrsize = sizeof(cliaddr);
+          client_sock = accept(serv_sock, (struct sockaddr *)&cliaddr, &addrsize);
 
-
-
-
+            FD_SET(client_sock, &reads);
+            if (fd_max < client_sock) {
+            fd_max = client_sock;
+            printf("connected client: %d\n", client_sock);
+          } else {
+            str_len = read(i, buf, BUF_SIZE);
+            if (str_len == 0) {
+              // close request
+              FD_CLR(i, &reads);
+              close(i);
+              printf("close client : %d\n", i);
+            } else {
+              write(i, buf, str_len);
+            }
+          }
+        }
+      }
+    }
   }
+  close(serv_sock);
 
+  return 0;
+}
 
-
+void error_handling(char *msg) {
+  fputs(msg, stderr);
+  fputc('\n', stderr);
+  exit(1);
 }
