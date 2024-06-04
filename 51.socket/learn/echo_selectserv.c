@@ -1,12 +1,12 @@
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/time.h>
-#include <sys/select.h>
+#include <unistd.h>
 
 #define BUF_SIZE 128
 void error_handling(char *msg);
@@ -21,8 +21,8 @@ int main(int argc, char **argv) {
   int fd_max, str_len, fd_num, i;
   char buf[BUF_SIZE];
 
-  if (argc !=2) {
-    printf("Usage : %s\n", argv[0]);
+  if (argc != 2) {
+    printf("Usage : %s <port>\n", argv[0]);
     exit(1);
   }
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
   servaddr.sin_port = htons(atoi(argv[1]));
 
-  if (bind(serv_sock, (struct sockaddr *)&serv_sock, sizeof(servaddr)) == -1) {
+  if (bind(serv_sock, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1) {
     error_handling("bind() error");
   }
 
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 
   fd_max = serv_sock;
 
-  while(1) {
+  while (1) {
     cpy_reads = reads;
     timeout.tv_sec = 5;
     timeout.tv_usec = 5000;
@@ -56,14 +56,15 @@ int main(int argc, char **argv) {
     if (fd_num == 0) {
       continue;
     }
-    for (i = 0; i < fd_num; i++) {
+    for (i = 0; i < fd_max + 1; i++) {
       if (FD_ISSET(i, &cpy_reads)) {
         if (i == serv_sock) {
           addrsize = sizeof(cliaddr);
-          client_sock = accept(serv_sock, (struct sockaddr *)&cliaddr, &addrsize);
+          client_sock =
+              accept(serv_sock, (struct sockaddr *)&cliaddr, &addrsize);
 
-            FD_SET(client_sock, &reads);
-            if (fd_max < client_sock) {
+          FD_SET(client_sock, &reads);
+          if (fd_max < client_sock) {
             fd_max = client_sock;
             printf("connected client: %d\n", client_sock);
           } else {
