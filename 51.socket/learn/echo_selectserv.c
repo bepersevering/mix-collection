@@ -27,6 +27,9 @@ int main(int argc, char **argv) {
   }
 
   serv_sock = socket(PF_INET, SOCK_STREAM, 0);
+  if (serv_sock == -1) {
+    error_handling("socket() error");
+  }
   bzero(&servaddr, sizeof(servaddr));
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
