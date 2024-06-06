@@ -69,6 +69,7 @@ void urg_handler(int signo) {
   printf("Urgent message: %s\n", buf);
 }
 
+
 void error_handling(char *msg) {
   fputs(msg, stderr);
   fputc('\n', stderr);
