@@ -1,9 +1,9 @@
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <strings.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
 
 #define BUF_SIZE 1024
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   readfp = fdopen(sockfd, "r");
   writefp = fdopen(sockfd, "w");
 
-  while(1) {
+  while (1) {
     if (fgets(buf, sizeof(buf), readfp) == NULL) {
       break;
     }
