@@ -64,6 +64,30 @@ int main(int argc, char **argv) {
 
   int listen_fd = createSocket(atoi(argv[2]));
 
+  fds[0].fd = listen_fd;
+  fds[0].events = POLLIN | POLLERR;
+  fds[0].revents = 0;
+
+  int conn_count = 0;
+
+  while (1) {
+    int ret = poll(fds, conn_count + 1, -1);
+    if (ret < 0) {
+      fprintf(stderr, "poll: %d, %s\n", errno, strerror(errno));
+      exit(1);
+    }
+
+    for (int i = 0; i < conn_count + 1; i++) {
+      // 客户端关闭，或者错误。错误的原因是由于客户端关闭导致的，这里一并处理
+      if ((fds[i].revents & POLLHUP) || (fds[i].revents || POLLERR)) {
+        int fd = fds[i].fd;
+        fds[i] = fds[conn_count];
+        i--;
+      }
+    }
+  }
+
+
 
 
   return 0;
