@@ -47,3 +47,24 @@ int createSocket(int port) {
 
   return listen_fd;
 }
+
+int setnoblock(int fd) {
+  int oldopt = fcntl(fd, F_GETFL);
+  int newopt = oldopt | O_NONBLOCK;
+  fcntl(fd, newopt);
+  return oldopt;
+}
+
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    fprintf(stderr, "Usage: %s <port>\n", argv[1]);
+    exit(1);
+  }
+  struct pollfd fds[CLIENT_SIZE];
+
+  int listen_fd = createSocket(atoi(argv[2]));
+
+
+
+  return 0;
+}
