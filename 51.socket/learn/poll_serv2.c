@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include "map.h"
 
 #define BUF_SIZE 10
 #define CLIENT_SIZE 96
