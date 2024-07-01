@@ -14,7 +14,7 @@ unsigned int hash(const char *key) {
   return hash % TABLE_SIZE;
 }
 
-Node* create_node(const char *key, char *value) {
+Node* create_node(const char *key, int value) {
   Node *new_node = (Node*)malloc(sizeof(Node));
   new_node->key = strdup(key);
   new_node->value = value;
@@ -31,7 +31,7 @@ HashTable* create_table() {
   return table;
 }
 
-void insert(HashTable *table, const char* key, char *value) {
+void insert(HashTable *table, const char* key, int value) {
   unsigned int index = hash(key);
   Node* new_node = create_node(key, value);
 
@@ -46,7 +46,7 @@ void insert(HashTable *table, const char* key, char *value) {
   }
 }
 
-char *find(HashTable *table, const char *key) {
+int find(HashTable *table, const char *key) {
   unsigned index = hash(key);
   Node* current = table->table[index];
   while (current != NULL) {
@@ -57,7 +57,7 @@ char *find(HashTable *table, const char *key) {
   }
 
   // 表示没找到
-  return NULL;
+  return -1;
 }
 
 void erase(HashTable *table, const char* key) {
