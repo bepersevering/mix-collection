@@ -5,18 +5,16 @@
 #include "hash_table.h"
 
 
-unsigned int hash(const char *key) {
+unsigned int hash(const int key) {
   unsigned int hash = 0;
-  while (*key) {
-    hash = (hash << 5) + *key++;
-  }
+  hash = abs(key);
 
   return hash % TABLE_SIZE;
 }
 
-Node* create_node(const char *key, char *value) {
+Node* create_node(const int key, char* value) {
   Node *new_node = (Node*)malloc(sizeof(Node));
-  new_node->key = strdup(key);
+  new_node->key = key;
   new_node->value = value;
   new_node->next = NULL;
   return new_node;
@@ -31,7 +29,7 @@ HashTable* create_table() {
   return table;
 }
 
-void insert(HashTable *table, const char* key, char *value) {
+void insert(HashTable *table, const int key,char* value) {
   unsigned int index = hash(key);
   Node* new_node = create_node(key, value);
 
@@ -46,11 +44,11 @@ void insert(HashTable *table, const char* key, char *value) {
   }
 }
 
-char *find(HashTable *table, const char *key) {
+char* find(HashTable *table, const int key) {
   unsigned index = hash(key);
   Node* current = table->table[index];
   while (current != NULL) {
-    if (strcmp(current->key, key) == 0) {
+    if (current->key ==  key) {
       return current->value;
     }
     current = current->next;
@@ -60,12 +58,12 @@ char *find(HashTable *table, const char *key) {
   return NULL;
 }
 
-void erase(HashTable *table, const char* key) {
+void erase(HashTable *table, const int key) {
   unsigned int index = hash(key);
   Node* current = table->table[index];
   Node* prev = NULL;
 
-  while (current != NULL && strcmp(current->key, key) != 0) {
+  while (current != NULL && current->key == key) {
     prev = current;
     current = current->next;
   }
@@ -82,7 +80,7 @@ void erase(HashTable *table, const char* key) {
     prev->next = current->next;
   }
 
-  free(current->key);
+  free(current->value);
   free(current);
 }
 
@@ -92,8 +90,7 @@ void free_table(HashTable* table) {
     while (current != NULL) {
       Node* temp = current;
       current = current->next;
-      free(temp->key);
-      free(temp);
+      free(temp->value);
     }
   }
 }

@@ -3,16 +3,16 @@
 
 int main() {
   HashTable* table = create_table();
-  insert(table, "apple", "5");
-  insert(table, "banana", "3");
-  insert(table, "orange", "7");
-  insert(table, "mongo", "21");
+  insert(table, 5, "apple");
+  insert(table, 3, "banana");
+  insert(table, 7, "orange");
+  insert(table, 21, "mongo");
 
-  printf("Value of 'apple': %s\n", find(table, "apple"));
-  printf("Value of 'banana': %s\n", find(table, "banana"));
+  printf("Value of 'apple': %s\n", find(table, 5));
+  printf("Value of 'banana': %s\n", find(table, 3));
 
-  erase(table, "apple");
-  printf("Value of 'apple': %s\n", find(table, "apple"));
+  erase(table, 5);
+  printf("Value of 'apple': %s\n", find(table, 5));
 
   free_table(table);
 

@@ -6,8 +6,8 @@
 
 // 链表节点结构
 typedef struct Node {
-  char *key;
-  char *value;
+  int key;
+  char* value;
   struct Node *next;
 } Node;
 
@@ -20,12 +20,12 @@ typedef struct HashTable {
  *
  * 哈希函数
  */
-unsigned int hash(const char *key);
+unsigned int hash(const int key);
 
 /**
  * 创建新的节点
  */
-Node *create_node(const char *key, char *value);
+Node *create_node(const int key, char* value);
 
 /**
  * 创建哈希表
@@ -35,17 +35,17 @@ HashTable* create_table();
 /**
  * 插入键值对
  */
-void insert(HashTable *table, const char *key, char *value);
+void insert(HashTable *table, const int key, char* value);
 
 /**
  * 查找值
  */
-char* find(HashTable *table, const char *key);
+char* find(HashTable *table, const int key);
 
 /**
  * 删除键值对
  */
-void erase(HashTable *table, const char *key);
+void erase(HashTable *table, const int key);
 
 /**
  *释放内存

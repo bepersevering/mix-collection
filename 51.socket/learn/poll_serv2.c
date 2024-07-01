@@ -8,7 +8,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "map.h"
+#include "hash_table.h"
 
 #define BUF_SIZE 10
 #define CLIENT_SIZE 96
@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
   struct pollfd fds[CLIENT_SIZE];
 
   int listen_fd = createSocket(atoi(argv[2]));
+  HashTable *mapdata = create_table();
 
   fds[0].fd = listen_fd;
   fds[0].events = POLLIN | POLLERR;
@@ -84,6 +85,8 @@ int main(int argc, char **argv) {
         int fd = fds[i].fd;
         fds[i] = fds[conn_count];
         i--;
+        conn_count--;
+        erase(mapdata, fd);
       }
     }
   }
