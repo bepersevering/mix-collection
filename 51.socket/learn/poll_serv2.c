@@ -87,7 +87,58 @@ int main(int argc, char **argv) {
         i--;
         conn_count--;
         erase(mapdata, fd);
+        close(fd);
+        printf("delete connection: %d\n", fd);
+
+      } else if ((fds[i].fd == listen_fd) && fds[i].revents & POLLIN){
+        // 新的链接
+        struct sockaddr_in client_addr;
+        socklen_t addr_len = sizeof(client_addr);
+        int conn = -1;
+        if (-1 == (conn = accept(listen_fd, &client_addr, &addr_len))) {
+          fprintf(stderr, "accept: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+        printf("get connection %d from %s:%d\n", conn, 
+               inet_ntoa(client_addr.sin_addr), client_addr.sin_port);
+
+        conn_count++;
+        setnoblock(conn);
+        fds[conn_count].fd = conn;
+        fds[conn_count].events = POLLIN | POLLHUP | POLLERR;
+        fds[conn_count].revents = 0;
+      } else if (fds[i].revents & POLLIN) {
+        char buf[BUF_SIZE] = {0};
+
+        int recv_len = recv(fds[i].fd, buf, BUF_SIZE - 1, 0);
+
+        if (recv_len > 0) {
+          insert(mapdata, fds[i].fd, buf);
+          fds[i].events &= (~POLLIN);
+          fds[i].events |= POLLIN;
+        } else if (recv_len == 0) {
+          printf("---------- client %d exit (no print) ----------\n", fds[i].fd);
+        } else {
+          fprintf(stderr, "recv: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+
+      } else if (fds[i].revents & POLLOUT) {
+        // 可写数据
+        if (send(fds[i].fd, find(mapdata, fds[i].fd), 
+            sizeof(fds[i].fd) / sizeof(char), 0) < 0) {
+          if (ECONNRESET == errno) {
+            continue;
+          }
+          fprintf(stderr, "send: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+
+        fds[i].events &= (~POLLOUT);
+        fds[i].events |= POLLIN;
       }
+
+
     }
   }
 
