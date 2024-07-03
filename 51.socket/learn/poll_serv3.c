@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -14,7 +15,7 @@
 
 typedef struct {
   int fd;
-  char bufer[BUF_SIZE];
+  char buffer[BUF_SIZE];
 } ClientData;
 
 int create_socket(int port) {
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
 
   struct pollfd fds[CLIENT_SIZE];
   ClientData clientData[CLIENT_SIZE]; 
-  int listen_fd = create_socket(atoi(argv[2]));
+  int listen_fd = create_socket(atoi(argv[1]));
   fds[0].fd = listen_fd;
   fds[0].events = POLLIN | POLLERR;
   fds[0].revents = 0;
@@ -106,7 +107,36 @@ int main(int argc, char **argv) {
         fds[conn_count].events = POLLIN | POLLHUP | POLLERR;
         fds[conn_count].revents = 0;
         clientData[conn_count].fd = client_fd;
+      }
+      else if (fds[i].revents & POLLIN) {
+        // 有可读数据
+        char buf[BUF_SIZE] = {0};
 
+        int recv_len = recv(fds[i].fd, buf, BUF_SIZE - 1, 0);
+
+        if (recv_len > 0) {
+          strncpy(clientData[i].buffer, buf, BUF_SIZE - 1);
+          fds[i].events = fds[i].events & (~POLLIN);
+          fds[i].events = fds[i].events | POLLOUT;
+        } else if (recv_len == 0) {
+          printf("---------client %d exit(not print) ----------\n", fds[i].fd);
+        } else {
+          fprintf(stderr, "recv: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+      } else if (fds[i].revents & POLLOUT) {
+        // 写数据
+        if (send(fds[i].fd, clientData[i].buffer, 
+          strlen(clientData[i].buffer), 0) < 0) {
+          
+          if (ECONNRESET == errno) {
+            continue;
+          }
+          fprintf(stderr, "send: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+        fds[i].events &= (~POLLOUT);
+        fds[i].events |= POLLIN;
 
       }
 
