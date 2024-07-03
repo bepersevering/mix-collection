@@ -1,11 +1,11 @@
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <poll.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
@@ -30,7 +30,7 @@ int create_socket(int port) {
   serv_addr.sin_port = htons(port);
   inet_pton(PF_INET, "0.0.0.0", &serv_addr.sin_addr);
 
-  if (-1 == bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) {
+  if (-1 == bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))) {
     fprintf(stderr, "bind() error: %d, %s\n", errno, strerror(errno));
     exit(1);
   }
@@ -54,11 +54,64 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Usage %s <port> \n", argv[1]);
     exit(1);
   }
+
   struct pollfd fds[CLIENT_SIZE];
+  ClientData clientData[CLIENT_SIZE]; 
   int listen_fd = create_socket(atoi(argv[2]));
+  fds[0].fd = listen_fd;
+  fds[0].events = POLLIN | POLLERR;
+  fds[0].revents = 0;
+  int conn_count = 0;
+
+  for (int i = 0; i < CLIENT_SIZE; i++) {
+    clientData[i].fd = -1;
+  }
+
+  while(1) {
+    int ret = poll(fds, conn_count+1, -1);
+    if (ret < 0) {
+      fprintf(stderr, "poll: %d, %s\n", errno, strerror(errno));
+      exit(1);
+    }
+
+    for (int i = 0; i < conn_count + 1; i++) {
+      // 如果是POLLRDHUP 或者POLLERR
+      if ((fds[i].revents & POLLHUP) || (fds[i].revents & POLLERR)) {
+        int fd = fds[i].fd;
+        fds[i] = fds[conn_count];
+        clientData[i] = clientData[conn_count];
+        i--;
+        conn_count--;
+        close(fd);
+        printf("delete connection: %d\n", fd);
+      }
+      else if ((fds[i].fd == listen_fd) && (fds[i].revents & POLLIN)) {
+        // 如果fd是监听fd且为POLLIN事件
+        struct sockaddr_in client_addr;
+        socklen_t client_len = sizeof(client_addr);
+
+        int client_fd = -1;
+        if (-1 == (client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &client_len))) {
+          fprintf(stderr, "accept: %d, %s\n", errno, strerror(errno));
+          exit(1);
+        }
+
+        printf("get connection %d from %s:%d\n", 
+               client_fd, inet_ntoa(client_addr.sin_addr), client_addr.sin_port);
+
+        conn_count++;
+        set_no_block(client_fd);
+        fds[conn_count].fd = client_fd;
+        // 设置关心的事件
+        fds[conn_count].events = POLLIN | POLLHUP | POLLERR;
+        fds[conn_count].revents = 0;
+        clientData[conn_count].fd = client_fd;
 
 
-    return 0;
+      }
+
+    }
+  }
+
+  return 0;
 }
-
-
