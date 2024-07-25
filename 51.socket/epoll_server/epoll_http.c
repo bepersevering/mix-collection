@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -80,6 +81,37 @@ void do_read(int client_fd, int epoll_fd) {
     printf("============= The End ============\n");
   }
 
+  // 请求行：get /xxx http/1.1
+  // 判断是汪是get请求
+  if (strncasecmp("get", line, 3) == 0) {
+    // 处理http请求
+    http_request(line, client_fd);
+    // 关闭套接字，client_fd从epoll上del
+    disconnect(client_fd, epoll_fd);
+  }
 }
+
+
+// 断开连接的函数
+void disconnect(int client_fd, int epoll_fd) {
+  int ret = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
+  if (ret == -1) {
+    perror("epoll_ctl_del cfd erro");
+    exit(1);
+  }
+  close(client_fd);
+}
+
+// 处理http请求
+void http_request(const char *request, int client_fd) {
+  // 拆分http请求行
+  // get /xxx http/1.1
+  char method[12], path[1024], protocol[12];
+
+  sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
+
+}
+
+
 
 int main(int argc, char **argv) { return 0; }
