@@ -109,6 +109,22 @@ void http_request(const char *request, int client_fd) {
   char method[12], path[1024], protocol[12];
 
   sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
+  printf("method = %s, path = %s, protocal = %s\n", method, path, protocol);
+
+  // 转码 将不能识别的中文乱码 --> 中文
+  // 解码 %23 %34 %5f
+  decode_str(path, path);
+  // 处理path  /xx
+  // 去掉path中的/
+  char* file = path + 1;
+  // 如果没有指定访问的资源，默认显示资源目录中的内容
+  if (strcmp(path, "/") == 0) {
+    // file的值，资源目录的当前位置
+    file = "./";
+  }
+
+  // 获取文件属性
+
 
 }
 
