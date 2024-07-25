@@ -60,6 +60,25 @@ void epoll_run(int port) {
 void do_read(int client_fd, int epoll_fd) {
   // 将浏览器发过来的数据，读到buf中
   char line[1024] = {0};
+  // 读请求行
+  int len = get_line(client_fd, line, sizeof(line));
+
+  if (0 == len) {
+    printf("client disconnect...\n");
+    // 关闭套接字，client_fd从epoll上del
+    disconnect(client_fd, epoll_fd);
+  } else {
+    printf("request data: %s", line);
+    printf("============= request header ============\n");
+    // 还有数据没读完
+    // 继续读
+    while (len) {
+      char buf[1024] = {0};
+      len = get_line(client_fd, buf, sizeof(buf));
+      printf("-----: %s", buf);
+    }
+    printf("============= The End ============\n");
+  }
 
 }
 
