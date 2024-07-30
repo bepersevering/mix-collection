@@ -8,6 +8,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/epoll.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -158,6 +159,160 @@ void send_dir(int client_fd, const char* dirname) {
 
   // 目录项二级指针
   struct dirent **ptr;
+  int num = scandir(dirname, &ptr, NULL, alphasort);
+  // 遍历
+  int i = 0;
+  for (i = 0; i < num; i++) {
+    char* name = ptr[i]->d_name;
+    
+    // 拼接文件的完整路径
+    sprintf(path, "%s/%s", dirname, name);
+    printf("path = %s =============\n", path);
+
+    struct stat st;
+    stat(path, &st);
+
+    encode_str(enstr, sizeof(enstr), name);
+    // 如果是文件
+    if (S_ISREG(st.st_mode)) {
+      sprintf(buf + strlen(buf), 
+              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>",
+              enstr, name, (long)st.st_size);
+
+    } else if (S_ISDIR(st.st_mode)) {
+      sprintf(buf + strlen(buf), 
+              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>",
+              enstr, name, (long)st.st_size);
+    }
+
+    send(client_fd, buf, strlen(buf), 0);
+
+    memset(buf, 0, sizeof(buf));    
+  }
+
+  sprintf(buf + strlen(buf), "</table></body></html>");
+  send(client_fd, buf, strlen(buf), 0);
+
+  printf("dir message send OK!!!\n");
+
+#if 0
+  // 打开目录
+  DIR* dir = opendir(dirname);
+  if (dir == NULL) {
+    perror("opendir error");
+    exit(1);
+  }
+  // 读目录
+  struct dirent* ptr1 = NULL;
+  while((ptr = readdir(dir)) != NULL) {
+    char* name = ptr1->d_name;
+  }
+  closedir(dir);
+
+#endif 
+}
+
+// 发送响应头
+void send_respond_head(int client_fd, int status, char *desp, const char* type, long len) {
+  char buf[1024] = {0};
+  // 状态行
+  sprintf(buf, "http/1.1 %d %s\r\n", status, desp);
+  send(client_fd, buf, strlen(buf), 0);
+
+  // 消息报头
+  sprintf(buf, "Content-Type:%s\r\n", type);
+  sprintf(buf + strlen(buf), "Content-Length:%ld\r\n", len);
+  send(client_fd, buf, strlen(buf), 0);
+  // 空行
+  send(client_fd, "\r\n", 2, 0); 
+}
+
+// 发送文件
+void send_file(int client_fd, const char* filename) {
+  // 打开文件
+  int fd = open(filename, O_RDONLY);
+  if (fd == -1) {
+    // show 404
+    return;
+  }
+
+  // 循环读文件
+  char buf[4096] = {0};
+  int len = 0;
+  while ((len = read(fd, buf, sizeof(buf)) > 0)) {
+    // 发送读出来的数据
+    send(client_fd, buf, len, 0);
+
+  }
+  
+  if (len == -1) {
+    perror("read file error");
+    exit(1);
+  }
+
+  close(fd);
+}
+
+// 解析hhtp请求消息的每一行内容
+int get_len(int sock, char* buf, int size) {
+  int i = 0;
+  char c = '\0';
+  int n;
+
+  while ((i < size -1) && (c != '\n')) {
+    // 接收1个字节
+    n = recv(sock, &c, 1, 0);
+    if (n > 0) {
+      if (c == '\r') {
+        n = recv(sock, &c, 1, MSG_PEEK);
+        if ((n > 0) && (c == '\n')) {
+          recv(sock, &c, 1, 0);
+        } else {
+          c = '\n';
+        }
+      }
+      buf[i] = c;
+      i++;
+    } else {
+      c = '\n';
+    }
+  }
+
+  buf[i] = '\0';
+
+  return i;
+}
+
+
+// 接受新连接处理
+void do_accept(int listen_fd, int epoll_fd) {
+  struct sockaddr_in client_addr;
+
+  socklen_t client_len = sizeof(client_addr);
+
+  int client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &client_len);
+
+  if (client_fd == -1) {
+    perror("accept error");
+    exit(1);
+  }
+
+  // 打印客户端信息
+  char ip[64] = {0};
+  
+  printf("New Client IP: %s, Port: %d, client_fd = %d\n",
+         inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, ip, sizeof(ip)),
+         ntohs(client_addr.sin_port),
+         client_fd
+         );
+
+  // 设置client_fd为非阻塞
+  int flag = fcntl(client_fd, F_GETFL);
+  flag |= O_NONBLOCK;
+  fcntl(client_fd, F_SETFL, flag);
+
+  // 得到新的节点持到epoll树上
+  
 
 }
 

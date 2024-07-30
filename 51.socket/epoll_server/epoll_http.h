@@ -15,7 +15,7 @@ void disconnect(int client_fd, int epoll_fd);
 
 void http_request(const char* request, int client_fd);
 
-void send_respond_head(int client_fd, int no, char *desp, const char* type, long len);
+void send_respond_head(int client_fd, int status, char *desp, const char* type, long len);
 
 void send_file(int client_fd, const char* filename);
 
