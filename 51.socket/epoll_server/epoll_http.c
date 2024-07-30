@@ -8,6 +8,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/epoll.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -91,7 +92,6 @@ void do_read(int client_fd, int epoll_fd) {
   }
 }
 
-
 // 断开连接的函数
 void disconnect(int client_fd, int epoll_fd) {
   int ret = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, NULL);
@@ -116,7 +116,7 @@ void http_request(const char *request, int client_fd) {
   decode_str(path, path);
   // 处理path  /xx
   // 去掉path中的/
-  char* file = path + 1;
+  char *file = path + 1;
   // 如果没有指定访问的资源，默认显示资源目录中的内容
   if (strcmp(path, "/") == 0) {
     // file的值，资源目录的当前位置
@@ -124,10 +124,41 @@ void http_request(const char *request, int client_fd) {
   }
 
   // 获取文件属性
+  struct stat st;
+  int ret = stat(file, &st);
+  if (-1 == ret) {
+    // show 404 Not Found
+    send_respond_head(client_fd, 404, "File Not Found", ".html", -1);
+    send_file(client_fd, "404.html");
+  }
 
-
+  // 判断是目录还是文件
+  if (S_ISDIR(st.st_mode)) {
+    // 发送头消息
+    send_respond_head(client_fd, 200, "OK", get_file_type(".html"), -1);
+    // 发送目录信息
+    send_dir(client_fd, file);
+  } else if (S_ISREG(st.st_mode)) {
+    // 文件
+    // 发送消息报头
+    send_respond_head(client_fd, 200, "OK", get_file_type(file), st.st_size);
+    send_file(client_fd, file);
+  }
 }
 
+// 发送目录内容
+void send_dir(int client_fd, const char* dirname) {
+  // 拼一个html页面<table></table>
+  char buf[4096] = {0};
+  sprintf(buf, "<html><head><title>dir:%s</title></head>", dirname);
+  sprintf(buf + strlen(buf), "<body><h1>cur dir: %s</h1>/<table>", dirname);
 
+  char enstr[1024] = {0};
+  char path[1024] = {0};
+
+  // 目录项二级指针
+  struct dirent **ptr;
+
+}
 
 int main(int argc, char **argv) { return 0; }
