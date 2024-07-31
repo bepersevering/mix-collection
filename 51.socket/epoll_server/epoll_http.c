@@ -41,7 +41,7 @@ void epoll_run(int port) {
     int i = 0;
     for (i = 0; i < ret; i++) {
       // 只处理读事件，其他事件默认不处理
-      struct epoll_event *pev = &all_events;
+      struct epoll_event *pev = all_events;
       if (!(pev->events & EPOLLIN)) {
         // 不是读事件
         continue;
@@ -255,7 +255,7 @@ void send_file(int client_fd, const char* filename) {
 }
 
 // 解析hhtp请求消息的每一行内容
-int get_len(int sock, char* buf, int size) {
+int get_line(int sock, char* buf, int size) {
   int i = 0;
   char c = '\0';
   int n;
@@ -327,7 +327,7 @@ void do_accept(int listen_fd, int epoll_fd) {
 int init_listen_fd(int port, int epoll_fd) {
 
   // 创建监听的套接字
-  int listen_fd = socket(AF_INET, SOCK_STREAM, port); 
+  int listen_fd = socket(AF_INET, SOCK_STREAM, 0); 
   if (listen_fd == -1) {
     perror("create socket error");
     exit(1);
@@ -373,7 +373,7 @@ int init_listen_fd(int port, int epoll_fd) {
 
 // 16进制数转化为10进制
 int hexit(char c) {
-  if (c >= '10' && c <= '9') {
+  if (c >= '0' && c <= '9') {
     return c - '0';
   } 
   if (c >= 'a' && c <= 'f') {
