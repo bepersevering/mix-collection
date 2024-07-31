@@ -106,46 +106,52 @@ void disconnect(int client_fd, int epoll_fd) {
 
 // 处理http请求
 void http_request(const char *request, int client_fd) {
-  // 拆分http请求行
-  // get /xxx http/1.1
-  char method[12], path[1024], protocol[12];
-
-  sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
-  printf("method = %s, path = %s, protocal = %s\n", method, path, protocol);
-
-  // 转码 将不能识别的中文乱码 --> 中文
-  // 解码 %23 %34 %5f
-  decode_str(path, path);
-  // 处理path  /xx
-  // 去掉path中的/
-  char *file = path + 1;
-  // 如果没有指定访问的资源，默认显示资源目录中的内容
-  if (strcmp(path, "/") == 0) {
-    // file的值，资源目录的当前位置
-    file = "./";
-  }
-
-  // 获取文件属性
-  struct stat st;
-  int ret = stat(file, &st);
-  if (-1 == ret) {
-    // show 404 Not Found
-    send_respond_head(client_fd, 404, "File Not Found", ".html", -1);
-    send_file(client_fd, "404.html");
-  }
-
-  // 判断是目录还是文件
-  if (S_ISDIR(st.st_mode)) {
-    // 发送头消息
-    send_respond_head(client_fd, 200, "OK", get_file_type(".html"), -1);
-    // 发送目录信息
-    send_dir(client_fd, file);
-  } else if (S_ISREG(st.st_mode)) {
-    // 文件
-    // 发送消息报头
-    send_respond_head(client_fd, 200, "OK", get_file_type(file), st.st_size);
-    send_file(client_fd, file);
-  }
+    // 拆分http请求行
+    // get /xxx http/1.1
+    char method[12], path[1024], protocol[12];
+    sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
+ 
+    printf("method = %s, path = %s, protocol = %s\n", method, path, protocol);
+ 
+    // 转码 将不能识别的中文乱码 - > 中文
+    // 解码 %23 %34 %5f
+    decode_str(path, path);
+        // 处理path  /xx
+        // 去掉path中的/
+        char* file = path+1;
+    // 如果没有指定访问的资源, 默认显示资源目录中的内容
+    if(strcmp(path, "/") == 0)
+    {
+        // file的值, 资源目录的当前位置
+        file = "./";
+    }
+ 
+    // 获取文件属性
+    struct stat st;
+    int ret = stat(file, &st);
+    if(ret == -1)
+    {
+        // show 404
+        send_respond_head(client_fd, 404, "File Not Found", ".html", -1);
+        send_file(client_fd, "404.html");
+    }
+ 
+    // 判断是目录还是文件
+    // 如果是目录
+    if(S_ISDIR(st.st_mode))
+    {
+        // 发送头信息
+        send_respond_head(client_fd, 200, "OK", get_file_type(".html"), -1);
+        // 发送目录信息
+        send_dir(client_fd, file);
+    }
+    else if(S_ISREG(st.st_mode))
+    {
+        // 文件
+        // 发送消息报头
+        send_respond_head(client_fd, 200, "OK", get_file_type(file), st.st_size);
+        // 发送文件内容
+    }
 }
 
 // 发送目录内容
