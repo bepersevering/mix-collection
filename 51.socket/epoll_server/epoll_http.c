@@ -155,7 +155,13 @@ void http_request(const char *request, int client_fd) {
 }
 
 // 发送目录内容
-void send_dir(int client_fd, const char* dirname) {
+void send_dir(int client_fd, const char* path) {
+  
+
+}
+
+// 发送目录内容
+void send_dir1(int client_fd, const char* dirname) {
   // 拼一个html页面<table></table>
   char buf[4096] = {0};
   sprintf(buf, "<html><head><title>dir:%s</title></head>", dirname);
@@ -165,11 +171,11 @@ void send_dir(int client_fd, const char* dirname) {
   char path[1024] = {0};
 
   // 目录项二级指针
-  struct dirent **ptr;
+  struct dirent** ptr;
   int num = scandir(dirname, &ptr, NULL, alphasort);
   // 遍历
   int i = 0;
-  for (i = 0; i < num; i++) {
+  for (i = 0; i < num; ++i) {
     char* name = ptr[i]->d_name;
     
     // 拼接文件的完整路径
@@ -202,7 +208,7 @@ void send_dir(int client_fd, const char* dirname) {
 
   printf("dir message send OK!!!\n");
 
-#if 0
+#if 1
   // 打开目录
   DIR* dir = opendir(dirname);
   if (dir == NULL) {
@@ -246,7 +252,7 @@ void send_file(int client_fd, const char* filename) {
   // 循环读文件
   char buf[4096] = {0};
   int len = 0;
-  while ((len = read(fd, buf, sizeof(buf)) > 0)) {
+  while ((len = read(fd, buf, sizeof(buf))) > 0) {
     // 发送读出来的数据
     send(client_fd, buf, len, 0);
 
