@@ -31,7 +31,7 @@ void epoll_run(int port) {
   struct epoll_event all_events[MAX_SIZE];
 
   while (1) {
-    int ret = epoll_wait(epoll_fd, all_events, MAX_SIZE, -1);
+    int ret = epoll_wait(epoll_fd, all_events, MAX_SIZE, 0);
     if (-1 == ret) {
       perror("epoll_wait error");
       exit(1);
@@ -39,9 +39,9 @@ void epoll_run(int port) {
 
     // 遍历发生变化的节点
     int i = 0;
-    for (i = 0; i < ret; i++) {
+    for (i = 0; i < ret; ++i) {
       // 只处理读事件，其他事件默认不处理
-      struct epoll_event *pev = all_events;
+      struct epoll_event *pev = &all_events[i];
       if (!(pev->events & EPOLLIN)) {
         // 不是读事件
         continue;
@@ -106,173 +106,144 @@ void disconnect(int client_fd, int epoll_fd) {
 
 // 处理http请求
 void http_request(const char *request, int client_fd) {
-    // 拆分http请求行
-    // get /xxx http/1.1
-    char method[12], path[1024], protocol[12];
-    sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
- 
-    printf("method = %s, path = %s, protocol = %s\n", method, path, protocol);
- 
-    // 转码 将不能识别的中文乱码 - > 中文
-    // 解码 %23 %34 %5f
-    decode_str(path, path);
-        // 处理path  /xx
-        // 去掉path中的/
-        char* file = path+1;
-    // 如果没有指定访问的资源, 默认显示资源目录中的内容
-    if(strcmp(path, "/") == 0)
-    {
-        // file的值, 资源目录的当前位置
-        file = "./";
-    }
- 
-    // 获取文件属性
-    struct stat st;
-    int ret = stat(file, &st);
-    if(ret == -1)
-    {
-        // show 404
-        send_respond_head(client_fd, 404, "File Not Found", ".html", -1);
-        send_file(client_fd, "404.html");
-    }
- 
-    // 判断是目录还是文件
-    // 如果是目录
-    if(S_ISDIR(st.st_mode))
-    {
-        // 发送头信息
-        send_respond_head(client_fd, 200, "OK", get_file_type(".html"), -1);
-        // 发送目录信息
-        send_dir(client_fd, file);
-    }
-    else if(S_ISREG(st.st_mode))
-    {
-        // 文件
-        // 发送消息报头
-        send_respond_head(client_fd, 200, "OK", get_file_type(file), st.st_size);
-        // 发送文件内容
-    }
-}
+  // 拆分http请求行
+  // get /xxx http/1.1
+  char method[12], path[1024], protocol[12];
+  sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, protocol);
 
-// 发送目录内容
-void send_dir(int client_fd, const char* path) {
-  
+  printf("method = %s, path = %s, protocol = %s\n", method, path, protocol);
 
-}
-
-// 发送目录内容
-void send_dir1(int client_fd, const char* dirname) {
-  // 拼一个html页面<table></table>
-  char buf[4096] = {0};
-  sprintf(buf, "<html><head><title>dir:%s</title></head>", dirname);
-  sprintf(buf + strlen(buf), "<body><h1>cur dir: %s</h1>/<table>", dirname);
-
-  char enstr[1024] = {0};
-  char path[1024] = {0};
-
-  // 目录项二级指针
-  struct dirent** ptr;
-  int num = scandir(dirname, &ptr, NULL, alphasort);
-  // 遍历
-  int i = 0;
-  for (i = 0; i < num; ++i) {
-    char* name = ptr[i]->d_name;
-    
-    // 拼接文件的完整路径
-    sprintf(path, "%s/%s", dirname, name);
-    printf("path = %s =============\n", path);
-
-    struct stat st;
-    stat(path, &st);
-
-    encode_str(enstr, sizeof(enstr), name);
-    // 如果是文件
-    if (S_ISREG(st.st_mode)) {
-      sprintf(buf + strlen(buf), 
-              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>",
-              enstr, name, (long)st.st_size);
-
-    } else if (S_ISDIR(st.st_mode)) {
-      sprintf(buf + strlen(buf), 
-              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>",
-              enstr, name, (long)st.st_size);
-    }
-
-    send(client_fd, buf, strlen(buf), 0);
-
-    memset(buf, 0, sizeof(buf));    
+  // 转码 将不能识别的中文乱码 - > 中文
+  // 解码 %23 %34 %5f
+  decode_str(path, path);
+  // 处理path  /xx
+  // 去掉path中的/
+  char *file = path + 1;
+  // 如果没有指定访问的资源, 默认显示资源目录中的内容
+  if (strcmp(path, "/") == 0) {
+    // file的值, 资源目录的当前位置
+    file = "./";
   }
 
-  sprintf(buf + strlen(buf), "</table></body></html>");
-  send(client_fd, buf, strlen(buf), 0);
+  // 获取文件属性
+  struct stat st;
+  int ret = stat(file, &st);
+  if (ret == -1) {
+    // show 404
+    send_respond_head(client_fd, 404, "File Not Found", ".html", -1);
+    send_file(client_fd, "404.html");
+  }
 
-  printf("dir message send OK!!!\n");
+  // 判断是目录还是文件
+  // 如果是目录
+  if (S_ISDIR(st.st_mode)) {
+    // 发送头信息
+    send_respond_head(client_fd, 200, "OK", get_file_type(".html"), -1);
+    // 发送目录信息
+    send_dir(client_fd, file);
+  } else if (S_ISREG(st.st_mode)) {
+    // 文件
+    // 发送消息报头
+    send_respond_head(client_fd, 200, "OK", get_file_type(file), st.st_size);
+    // 发送文件内容
+    send_file(client_fd, file);
+  }
+}
 
+// 发送目录内容
+void send_dir1(int client_fd, const char *path) {}
+
+// 发送目录内容
+void send_dir(int client_fd, const char *dirname) {
+  char file[1024] = {0};
+  char buf[4096] = {0};
+  sprintf(buf, "<html><head><title>目录名: %s</title></head>", dirname);
+  sprintf(buf + strlen(buf), "<body><h1>当前目录: %s</h1><table>", dirname);
 #if 1
-  // 打开目录
-  DIR* dir = opendir(dirname);
+  DIR *dir = opendir(dirname);
   if (dir == NULL) {
     perror("opendir error");
     exit(1);
   }
   // 读目录
-  struct dirent* ptr1 = NULL;
-  while((ptr = readdir(dir)) != NULL) {
-    char* name = ptr1->d_name;
-  }
-  closedir(dir);
+  char enstr[1024] = {0};
+  struct dirent *ptr = NULL;
+  while ((ptr = readdir(dir)) != NULL) {
+    char *name = ptr->d_name;
+    // 拼接文件的完整路径
+    sprintf(file, "%s/%s", dirname, name);
 
-#endif 
+    encode_str(enstr, sizeof(enstr), name);
+    struct stat st;
+    int ret = stat(file, &st);
+    if (ret == -1) {
+      perror("stat err");
+      exit(1);
+    }
+    // 如果是文件
+    if (S_ISREG(st.st_mode)) {
+      sprintf(buf + strlen(buf),
+              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>", enstr,
+              name, (long)st.st_size);
+    }
+    // 如果是目录
+    else if (S_ISDIR(st.st_mode)) {
+      sprintf(buf + strlen(buf),
+              "<tr><td><a href=\"%s/\">%s/</a></td><td>%ld</td></tr>", enstr,
+              name, (long)st.st_size);
+    }
+    send(client_fd, buf, strlen(buf), 0);
+    memset(buf, 0, sizeof(buf));
+  }
+  sprintf(buf + strlen(buf), "</table></body></html>");
+  send(client_fd, buf, strlen(buf), 0);
+#endif
 }
 
 // 发送响应头
-void send_respond_head(int client_fd, int status, char *desp, const char* type, long len) {
+void send_respond_head(int client_fd, int status, char *desp, const char *type,
+                       long len) {
   char buf[1024] = {0};
   // 状态行
   sprintf(buf, "http/1.1 %d %s\r\n", status, desp);
   send(client_fd, buf, strlen(buf), 0);
-
   // 消息报头
+  memset(buf, 0, sizeof buf);
   sprintf(buf, "Content-Type:%s\r\n", type);
   sprintf(buf + strlen(buf), "Content-Length:%ld\r\n", len);
   send(client_fd, buf, strlen(buf), 0);
   // 空行
-  send(client_fd, "\r\n", 2, 0); 
+  send(client_fd, "\r\n", 2, 0);
 }
 
 // 发送文件
-void send_file(int client_fd, const char* filename) {
-  // 打开文件
+void send_file(int client_fd, const char *filename) {
   int fd = open(filename, O_RDONLY);
   if (fd == -1) {
-    // show 404
-    return;
-  }
-
-  // 循环读文件
-  char buf[4096] = {0};
-  int len = 0;
-  while ((len = read(fd, buf, sizeof(buf))) > 0) {
-    // 发送读出来的数据
-    send(client_fd, buf, len, 0);
-
-  }
-  
-  if (len == -1) {
-    perror("read file error");
+    // todo 404
+    perror("open err");
     exit(1);
   }
 
+  char buf[4096];
+  int ret = 0;
+  while ((ret = read(fd, buf, sizeof buf)) > 0) {
+    send(client_fd, buf, ret, 0);
+  }
+  if (ret == -1) {
+    perror("read err");
+    exit(1);
+  }
   close(fd);
 }
 
 // 解析hhtp请求消息的每一行内容
-int get_line(int sock, char* buf, int size) {
+int get_line(int sock, char *buf, int size) {
   int i = 0;
   char c = '\0';
   int n;
 
-  while ((i < size -1) && (c != '\n')) {
+  while ((i < size - 1) && (c != '\n')) {
     // 接收1个字节
     n = recv(sock, &c, 1, 0);
     if (n > 0) {
@@ -296,14 +267,14 @@ int get_line(int sock, char* buf, int size) {
   return i;
 }
 
-
 // 接受新连接处理
 void do_accept(int listen_fd, int epoll_fd) {
   struct sockaddr_in client_addr;
 
   socklen_t client_len = sizeof(client_addr);
 
-  int client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &client_len);
+  int client_fd =
+      accept(listen_fd, (struct sockaddr *)&client_addr, &client_len);
 
   if (client_fd == -1) {
     perror("accept error");
@@ -312,12 +283,10 @@ void do_accept(int listen_fd, int epoll_fd) {
 
   // 打印客户端信息
   char ip[64] = {0};
-  
+
   printf("New Client IP: %s, Port: %d, client_fd = %d\n",
          inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, ip, sizeof(ip)),
-         ntohs(client_addr.sin_port),
-         client_fd
-         );
+         ntohs(client_addr.sin_port), client_fd);
 
   // 设置client_fd为非阻塞
   int flag = fcntl(client_fd, F_GETFL);
@@ -339,7 +308,7 @@ void do_accept(int listen_fd, int epoll_fd) {
 int init_listen_fd(int port, int epoll_fd) {
 
   // 创建监听的套接字
-  int listen_fd = socket(AF_INET, SOCK_STREAM, 0); 
+  int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (listen_fd == -1) {
     perror("create socket error");
     exit(1);
@@ -356,7 +325,7 @@ int init_listen_fd(int port, int epoll_fd) {
   int flag = 1;
   setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
-  int ret = bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+  int ret = bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
 
   if (ret == -1) {
     perror("bind error");
@@ -374,30 +343,28 @@ int init_listen_fd(int port, int epoll_fd) {
   struct epoll_event ev;
   ev.events = EPOLLIN;
   ev.data.fd = listen_fd;
+
   ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_fd, &ev);
   if (ret == -1) {
     perror("epoll_ctl add listen_fd error");
     exit(1);
   }
-  
+
   return listen_fd;
 }
 
 // 16进制数转化为10进制
 int hexit(char c) {
-  if (c >= '0' && c <= '9') {
+  if (c >= '0' && c <= '9')
     return c - '0';
-  } 
-  if (c >= 'a' && c <= 'f') {
+  if (c >= 'a' && c <= 'f')
     return c - 'a' + 10;
-  }
-  if (c >= 'A' && c <= 'F') {
+  if (c >= 'A' && c <= 'F')
     return c - 'A' + 10;
-  }
+
   return 0;
 }
 
- 
 /*
  *  这里的内容是处理%20之类的东西！是"解码"过程。
  *  %20 URL编码中的‘ ’(space)
@@ -405,11 +372,11 @@ int hexit(char c) {
  *  %25 '%' %26 '&' %27 ''' %28 '('......
  *  相关知识html中的‘ ’(space)是&nbsp
  */
-void encode_str(char* to, int tosize, const char* from) {
+void encode_str(char *to, int tosize, const char *from) {
   int tolen;
 
   for (tolen = 0; *from != '\0' && tolen + 4 < tosize; ++from) {
-    if (isalnum(*from) || strchr("/_.-~", *from) != (char*)0) {
+    if (isalnum(*from) || strchr("/_.-~", *from) != (char *)0) {
       *to = *from;
       ++to;
       ++tolen;
@@ -422,56 +389,55 @@ void encode_str(char* to, int tosize, const char* from) {
   *to = '\0';
 }
 
-void decode_str(char* to, char* from) {
-  for(; *from != '\0'; ++to, ++from) {
+void decode_str(char *to, char *from) {
+  for (; *from != '\0'; ++to, ++from) {
     if (from[0] == '%' && isxdigit(from[1]) && isxdigit(from[2])) {
       *to = hexit(from[1]) * 16 + hexit(from[2]);
       from += 2;
     } else {
-      *to  = *from;
+      *to = *from;
     }
   }
+  *to = '\0';
 }
 
 // 通过文件名获取文件的类型
-const char *get_file_type(const char *name)
-{
-    char* dot;
- 
-    // 自右向左查找‘.’字符, 如不存在返回NULL
-    dot = strrchr(name, '.');
-    if (dot == NULL)
-        return "text/plain; charset=utf-8";
-    if (strcmp(dot, ".html") == 0 || strcmp(dot, ".htm") == 0)
-        return "text/html; charset=utf-8";
-    if (strcmp(dot, ".jpg") == 0 || strcmp(dot, ".jpeg") == 0)
-        return "image/jpeg";
-    if (strcmp(dot, ".gif") == 0)
-        return "image/gif";
-    if (strcmp(dot, ".png") == 0)
-        return "image/png";
-    if (strcmp(dot, ".css") == 0)
-        return "text/css";
-    if (strcmp(dot, ".au") == 0)
-        return "audio/basic";
-    if (strcmp( dot, ".wav" ) == 0)
-        return "audio/wav";
-    if (strcmp(dot, ".avi") == 0)
-        return "video/x-msvideo";
-    if (strcmp(dot, ".mov") == 0 || strcmp(dot, ".qt") == 0)
-        return "video/quicktime";
-    if (strcmp(dot, ".mpeg") == 0 || strcmp(dot, ".mpe") == 0)
-        return "video/mpeg";
-    if (strcmp(dot, ".vrml") == 0 || strcmp(dot, ".wrl") == 0)
-        return "model/vrml";
-    if (strcmp(dot, ".midi") == 0 || strcmp(dot, ".mid") == 0)
-        return "audio/midi";
-    if (strcmp(dot, ".mp3") == 0)
-        return "audio/mpeg";
-    if (strcmp(dot, ".ogg") == 0)
-        return "application/ogg";
-    if (strcmp(dot, ".pac") == 0)
-        return "application/x-ns-proxy-autoconfig";
- 
+const char *get_file_type(const char *name) {
+  char *dot;
+  // 自右向左查找‘.’字符, 如不存在返回NULL
+  dot = strrchr(name, '.');
+  if (dot == NULL)
     return "text/plain; charset=utf-8";
+  if (strcmp(dot, ".html") == 0 || strcmp(dot, ".htm") == 0)
+    return "text/html; charset=utf-8";
+  if (strcmp(dot, ".jpg") == 0 || strcmp(dot, ".jpeg") == 0)
+    return "image/jpeg";
+  if (strcmp(dot, ".gif") == 0)
+    return "image/gif";
+  if (strcmp(dot, ".png") == 0)
+    return "image/png";
+  if (strcmp(dot, ".css") == 0)
+    return "text/css";
+  if (strcmp(dot, ".au") == 0)
+    return "audio/basic";
+  if (strcmp(dot, ".wav") == 0)
+    return "audio/wav";
+  if (strcmp(dot, ".avi") == 0)
+    return "video/x-msvideo";
+  if (strcmp(dot, ".mov") == 0 || strcmp(dot, ".qt") == 0)
+    return "video/quicktime";
+  if (strcmp(dot, ".mpeg") == 0 || strcmp(dot, ".mpe") == 0)
+    return "video/mpeg";
+  if (strcmp(dot, ".vrml") == 0 || strcmp(dot, ".wrl") == 0)
+    return "model/vrml";
+  if (strcmp(dot, ".midi") == 0 || strcmp(dot, ".mid") == 0)
+    return "audio/midi";
+  if (strcmp(dot, ".mp3") == 0)
+    return "audio/mpeg";
+  if (strcmp(dot, ".ogg") == 0)
+    return "application/ogg";
+  if (strcmp(dot, ".pac") == 0)
+    return "application/x-ns-proxy-autoconfig";
+
+  return "text/plain; charset=utf-8";
 }
