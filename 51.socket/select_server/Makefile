@@ -1,0 +1,41 @@
+CC = gcc
+CPP = g++
+RM = rm -rf
+
+DEBUG_ENABLE = 1
+
+SRC_PATH := .
+
+SRCS += $(wildcard $(SRC_PATH))/*c
+
+TARGET := httpd
+
+OBJS := $(SRCS:.c=.o)
+LIBS := pthread
+
+INCLUDE_PATH := . /usr/local/include/
+
+LIB_PATH := . /usr/local/lib
+
+ifeq (1, $(DEBUG_ENABLE))
+	CFLAGS += -D_DEBUG =O0 -g -DDEBUG=1 -Wl,--no-as-needed -lm
+endif
+
+## get all include path
+CFLAGS += $(foreach dir, $(INCLUDE_PATH), -I$(dir))
+## get all library path
+CFLAGS += $(foreach lib, $(LIB_PATH), -L$(lib))
+## get all librarys
+LDFLAGS += $(foreach lib, $(LIBS), -l$(lib))
+
+all: clean build
+build:
+	$(CC) -c $(CFLAGS) $(SRCS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LDFLAGS)
+	$(RM) $(OBJS)
+
+clean:
+	$(RM) $(OBJS) $(TARGET)
+
+
+
