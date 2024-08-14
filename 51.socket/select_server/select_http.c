@@ -14,12 +14,18 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_SIZE 2000
+#define MAX_SIZE 200
+#define BUFFER_SIZE 1024
+
+
 
 // select run
 void select_run(int port) {
-  int socket_fd;
+  int socket_fd, client_fd, max_sd, activity, new_socket;
   struct sockaddr_in server_addr;
+  int addr_len = sizeof(server_addr);
+  int client_sockets[MAX_SIZE];
+  fd_set readfds;
 
   int socket_opt = 1;
   // 创建socket
@@ -57,5 +63,7 @@ void select_run(int port) {
 
   // 循环处理
   while (1) {
+    FD_ZERO(&readfds);
+
   }
 }
