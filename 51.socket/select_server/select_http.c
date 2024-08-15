@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_SIZE 200
+#define MAX_CLIENTS 200
 #define BUFFER_SIZE 1024
 
 
@@ -24,7 +24,7 @@ void select_run(int port) {
   int socket_fd, client_fd, max_sd, activity, new_socket;
   struct sockaddr_in server_addr;
   int addr_len = sizeof(server_addr);
-  int client_sockets[MAX_SIZE];
+  int client_sockets[MAX_CLIENTS];
   fd_set readfds;
 
   int socket_opt = 1;
@@ -63,7 +63,20 @@ void select_run(int port) {
 
   // 循环处理
   while (1) {
+    // clear the socket set
     FD_ZERO(&readfds);
+
+    // add server socket to set
+    FD_SET(socket_fd, &readfds);
+
+    max_sd = socket_fd;
+
+    // add child sockets to set
+    for (i = 0; i < MAX_CLIENTS; i++) {
+      sd = client_sockets[i];
+
+      // 
+    }
 
   }
 }
