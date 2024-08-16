@@ -12,7 +12,30 @@
 #define MAX_CLIENTS 100
 
 void handle_client(int client_sock) {
-  
+  char buf[BUF_SIZE];
+
+  int read_bytes = read(client_sock, buf, sizeof(buf) - 1);
+  if (read_bytes < 0) {
+    perror("read error");
+    close(client_sock);
+    return;
+  }
+
+  // null-terminate the request
+  buf[read_bytes] = '\0';
+  printf("Received request:\n%s\n", buf);
+
+  // simple http response
+  const char *response = "HTTP/1.1 200 OK\r\n"
+                         "Content-Type: text/html\r\n"
+                         "Connection: close\r\n"
+                         "\r\n"
+                         "<!DOCTYPE html>"
+                         "<html><body><h1>Hello, World!</h1></body></html>";
+
+  write(client_sock, response, strlen(response));
+
+  close(client_sock);
 }
 
 int main() {
@@ -78,22 +101,23 @@ int main() {
 
     activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
 
-    if((activity < 0) && (errno != EINTR)) {
+    if ((activity < 0) && (errno != EINTR)) {
       perror("select error");
       exit(EXIT_FAILURE);
     }
 
-
-    // if something happened on the server socket, then it's an incoming connection 
+    // if something happened on the server socket, then it's an incoming
+    // connection
     if (FD_ISSET(sock_fd, &readfds)) {
-      if ((client_sock == accept(sock_fd, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len)) < 0) {
+      if ((client_sock = accept(sock_fd, (struct sockaddr *)&client_addr,
+                                 (socklen_t *)&addr_len)) < 0) {
         perror("accept error");
         exit(EXIT_FAILURE);
       }
 
       printf("New connection, socket fd is %d, ip is %s, port: %d\n",
-             client_sock, inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port)
-             );
+             client_sock, inet_ntoa(client_addr.sin_addr),
+             ntohs(client_addr.sin_port));
 
       // add new socket to array of sockets
       for (i = 0; i < MAX_CLIENTS; i++) {
@@ -103,7 +127,6 @@ int main() {
           break;
         }
       }
-
     }
     // handle IO operation on some other socket
     for (i = 0; i < MAX_CLIENTS; i++) {
@@ -115,7 +138,6 @@ int main() {
         client_sockets[i] = 0;
       }
     }
-
   }
 
   return 0;
