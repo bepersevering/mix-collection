@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <dirent.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -17,12 +18,10 @@
 #define MAX_CLIENTS 200
 #define BUFFER_SIZE 1024
 
-
-
 // select run
 void select_run(int port) {
-  int socket_fd, client_fd, max_sd, activity, new_socket;
-  struct sockaddr_in server_addr;
+  int socket_fd, client_fd, max_fd, activity, new_socket;
+  struct sockaddr_in server_addr, client_addr;
   int addr_len = sizeof(server_addr);
   int client_sockets[MAX_CLIENTS];
   fd_set readfds;
@@ -69,14 +68,34 @@ void select_run(int port) {
     // add server socket to set
     FD_SET(socket_fd, &readfds);
 
-    max_sd = socket_fd;
+    max_fd = socket_fd;
 
-    // add child sockets to set
-    for (i = 0; i < MAX_CLIENTS; i++) {
-      sd = client_sockets[i];
+    // 将客户端socket加到readfds集合中
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+      int sd = client_sockets[i];
 
-      // 
+      // 如果有效，则添加到readfds
+      if (sd > 0) {
+        FD_SET(sd, &readfds);
+      }
+      // 更新max_fd
+      if (sd > max_fd) {
+        max_fd = sd;
+      }
     }
 
+    // 使用select等待活动的client socket
+    activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
+
+    if ((activity < 0) && (errno != EINTR)) {
+      perror("select error");
+    }
+
+    // 如果在服务器socket上有连接请求
+    if (FD_ISSET(socket_fd, &readfds)) {
+      if ((new_socket = accept(socket_fd, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len)) < 0) {
+
+      }
+    }
   }
 }
