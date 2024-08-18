@@ -18,84 +18,82 @@
 #define MAX_CLIENTS 200
 #define BUFFER_SIZE 1024
 
+
+int init_listen_fd(int port) {
+  int listen_fd;
+
+  struct sockaddr_in serv_addr;
+
+  listen_fd = socket(AF_INET, SOCK_STREAM, 0);
+
+  if (listen_fd < 0) {
+    perror("socket error");
+    exit(EXIT_FAILURE);
+  }
+
+  bzero(&serv_addr, sizeof(serv_addr));
+
+  serv_addr.sin_family = AF_INET;
+  serv_addr.sin_port = htons(port);
+  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+    perror("bind error");
+    exit(EXIT_FAILURE);
+  }
+  
+  if (listen(listen_fd, LISTENQ) < 0) {
+    perror("listen error");
+    exit(EXIT_FAILURE);
+  }
+
+  return listen_fd;
+}
+
+
+
 // select run
 void select_run(int port) {
-  int socket_fd, client_fd, max_fd, activity, new_socket;
-  struct sockaddr_in server_addr, client_addr;
-  int addr_len = sizeof(server_addr);
-  int client_sockets[MAX_CLIENTS];
-  fd_set readfds;
+  int listen_fd, max_fd, client_fd;
+  fd_set allset, readset;
 
-  int socket_opt = 1;
-  // 创建socket
-  socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (socket_fd == 0) {
-    perror("socket failed\n");
-    exit(EXIT_FAILURE);
-  }
-  // 允许重用端口和地址
-  if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &socket_opt,
-                 sizeof(socket_opt)) < 0) {
-    perror("setsockopt failed\n");
-    exit(EXIT_FAILURE);
+  int client[FD_SETSIZE];
+  int nready;
+
+  struct sockaddr_in client_addr;
+
+  socklen_t cli_len;
+  int i;
+
+  listen_fd = init_listen_fd(port);
+  max_fd = listen_fd;
+  
+  for (i = 0; i < FD_SETSIZE; i++) {
+    client[i] = -1;
   }
 
-  // 设置socket的地址和端口号
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(port);
-  server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+  FD_ZERO(&allset);
 
-  // bind
-  if (bind(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
-      0) {
-    perror("bind failed\n");
-    exit(EXIT_FAILURE);
-  }
+  FD_SET(listen_fd, &allset);
 
-  // listen
-  if (listen(socket_fd, 5) < 0) {
-    perror("listen failed\n");
-    exit(EXIT_FAILURE);
-  }
-
-  printf("Server start, listening on port %d ...\n", port);
-
-  // 循环处理
+  // 循环
   while (1) {
-    // clear the socket set
-    FD_ZERO(&readfds);
+    readset = allset; 
+    
+    // select
+    nready = select(max_fd + 1, &readset, NULL, NULL, NULL);
 
-    // add server socket to set
-    FD_SET(socket_fd, &readfds);
+    if (FD_ISSET(listen_fd, &readset)) {
+      // 有可读事件
 
-    max_fd = socket_fd;
-
-    // 将客户端socket加到readfds集合中
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-      int sd = client_sockets[i];
-
-      // 如果有效，则添加到readfds
-      if (sd > 0) {
-        FD_SET(sd, &readfds);
-      }
-      // 更新max_fd
-      if (sd > max_fd) {
-        max_fd = sd;
-      }
     }
 
-    // 使用select等待活动的client socket
-    activity = select(max_fd + 1, &readfds, NULL, NULL, NULL);
 
-    if ((activity < 0) && (errno != EINTR)) {
-      perror("select error");
-    }
-
-    // 如果在服务器socket上有连接请求
-    if (FD_ISSET(socket_fd, &readfds)) {
-      if ((new_socket = accept(socket_fd, (struct sockaddr *)&client_addr, (socklen_t *)&addr_len)) < 0) {
-
-      }
-    }
   }
+
+
+
+
+
+
 }

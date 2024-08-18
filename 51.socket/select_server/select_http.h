@@ -1,6 +1,8 @@
 #ifndef _SELECT_SERVER_H
 #define _SELECT_SERVER_H
 
+#define LISTENQ 1024
+
 int init_listen_fd(int port);
 
 void select_run(int port);
