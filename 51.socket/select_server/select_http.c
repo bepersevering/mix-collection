@@ -189,6 +189,6 @@ void disconnect(int client_fd) {
 void http_request(const char* request, int client_fd) {
   char method[12], path[1024], port[12];
   
-  scanf(request, "%[^ ] %[^ ] &[^ ]", method, path, port);
+  scanf(request, "%[^ ] %[^ ] %[^ ]", method, path, port);
 
 }
