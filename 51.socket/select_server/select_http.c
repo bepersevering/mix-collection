@@ -18,7 +18,6 @@
 #define MAX_CLIENTS 200
 #define BUFFER_SIZE 1024
 
-
 int init_listen_fd(int port) {
   int listen_fd;
 
@@ -37,11 +36,11 @@ int init_listen_fd(int port) {
   serv_addr.sin_port = htons(port);
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (bind(listen_fd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+  if (bind(listen_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
     perror("bind error");
     exit(EXIT_FAILURE);
   }
-  
+
   if (listen(listen_fd, LISTENQ) < 0) {
     perror("listen error");
     exit(EXIT_FAILURE);
@@ -49,8 +48,6 @@ int init_listen_fd(int port) {
 
   return listen_fd;
 }
-
-
 
 // select run
 void select_run(int port) {
@@ -67,7 +64,7 @@ void select_run(int port) {
 
   listen_fd = init_listen_fd(port);
   max_fd = listen_fd;
-  
+
   for (i = 0; i < FD_SETSIZE; i++) {
     client[i] = -1;
   }
@@ -78,22 +75,120 @@ void select_run(int port) {
 
   // 循环
   while (1) {
-    readset = allset; 
-    
+    readset = allset;
+
     // select
     nready = select(max_fd + 1, &readset, NULL, NULL, NULL);
 
     if (FD_ISSET(listen_fd, &readset)) {
       // 有可读事件
+      cli_len = sizeof(client_addr);
+      client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &cli_len);
 
+      if (client_fd < 0) {
+        perror("accept error");
+        continue;
+      }
+
+      // 将client_fd放到client未使用的里面
+      for (i = 0; i < FD_SETSIZE; i++) {
+        if (client[i] < 0) {
+          client[i] = client_fd;
+          break;
+        }
+      }
+
+      // 客户端数量已经达到最大值,FD_SETSIZE
+      if (i == FD_SETSIZE) {
+        fprintf(stderr, "too many clients\n");
+        continue;
+      }
+
+      FD_SET(client_fd, &allset);
+
+      if (max_fd < client_fd) {
+        max_fd = client_fd;
+      }
+
+      if (--nready <= 0) {
+        continue;
+      }
     }
 
+    for (i = 0; i <= max_fd; i++) {
+      if (client[i] < 0) {
+        continue;
+      }
+      // 可读
+      if (FD_ISSET(client[i], &readset)) {
+        do_read(client_fd);
+        break;
+      }
+    }
+  }
+}
 
+void do_accept(int listen_fd) {
+  struct sockaddr_in client_addr;
+  socklen_t client_len = sizeof(client_addr);
+
+  int client_fd =
+      accept(listen_fd, (struct sockaddr *)&client_addr, &client_len);
+  if (client_fd < 0) {
+    perror("accept error");
+    exit(EXIT_FAILURE);
   }
 
+  do_read(client_fd);
+}
+
+void do_read(int client_fd) {
+  char buf[BUFFER_SIZE];
+
+  int n = get_line(client_fd, buf, sizeof(buf));
+
+  if (n <= 0) {
+    disconnect(client_fd);
+  } else {
+    http_request(buf, client_fd);
+  }
+}
+
+int get_line(int sock_fd, char *buf, int size) {
+  int i = 0;
+  char c = '\0';
+  int n;
+
+  while ((i < size - 1) && c != '\n') {
+    n = recv(sock_fd, &c, 1, 0);
+    if (n > 0) {
+      if (c == '\r') {
+        n = recv(sock_fd, &c, 1, MSG_PEEK);
+        if ((n > 0) && (c == '\n')) {
+          recv(sock_fd, &c, 1, 0);
+        } else {
+          c = '\n';
+        }
+      }
+      buf[i] = c;
+      i++;
+    } else {
+      c = '\n';
+    }
+  }
+  buf[i] = '\0';
+
+  return i;
+}
+
+void disconnect(int client_fd) {
+  close(client_fd);
+}
 
 
-
-
+void http_request(const char* request, int client_fd) {
+  char method[12], path[1024], port[12];
+  
+  scanf(request, "%[^ ] %[^ ] &[^ ]", method, path, port);
 
 }
