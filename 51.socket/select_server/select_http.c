@@ -262,13 +262,37 @@ void send_dir(int client_fd, const char *dirname) {
 
 #if 1
   DIR *dir = opendir(dirname);
+  if (dir == NULL) {
+    perror("opendir error");
+    exit(EXIT_FAILURE);
+  }
+  // 读目录
+  char enstr[1024] = {0};
+
   struct dirent *ptr = NULL;
   while((ptr = readdir(dir)) != NULL) {
     char *filename = ptr->d_name;
 
     // 拼接文件的完整路径
     sprintf(file, "%s/%s", dirname, filename);
+
+    encode_str(enstr, sizeof(enstr), filename);
+
+    struct stat st;
+    int ret = stat(file, &st);
+
+    if (-1 == ret) {
+      perror("stat error");
+      exit(EXIT_FAILURE);
+    }
+
+    // 如果是文件
+    if (S_ISREG(st.st_mode)) {
+      
+    }
+
   }  
+
 
 #endif
 }
