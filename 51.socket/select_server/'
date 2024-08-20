@@ -193,31 +193,10 @@ void http_request(const char* request, int client_fd) {
   scanf(request, "%[^ ] %[^ ] %[^ ]", method, path, port);
 
   // 判断是不是GET请求
-  if (strcasecmp(method, "GET") != 0) {
+  if (strcasecmp(method, "GET') != 0) {
     send_respond_head(client_fd, 501, "Not Support", "text/html", -1);
     return;
   }
-
-  char *file_path = path + 1;
-  struct stat st;
-
-  if (stat(file_path, &st) == -1) {
-    send_respond_head(client_fd, 400, "Not Found", "text/html", -1);
-    return;
-  } else {
-    if (S_ISDIR(st.st_mode)) {
-      // 目录
-      send_dir(client_fd, file_path);
-    } else {
-      // 文件
-      send_file(client_fd, file_path);
-    }
-  }
-
-}
-
-
-void send_respond_head(int client_fd, int status, char* desp, char* type, long length) {
 
 
 }
