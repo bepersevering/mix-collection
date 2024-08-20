@@ -181,15 +181,12 @@ int get_line(int sock_fd, char *buf, int size) {
   return i;
 }
 
-void disconnect(int client_fd) {
-  close(client_fd);
-}
-
+void disconnect(int client_fd) { close(client_fd); }
 
 // handle http request
-void http_request(const char* request, int client_fd) {
+void http_request(const char *request, int client_fd) {
   char method[12], path[1024], port[12];
-  
+
   scanf(request, "%[^ ] %[^ ] %[^ ]", method, path, port);
 
   // 判断是不是GET请求
@@ -202,7 +199,7 @@ void http_request(const char* request, int client_fd) {
   struct stat st;
 
   if (stat(file_path, &st) == -1) {
-    send_respond_head(client_fd, 400, "Not Found", "text/html", -1);
+    send_respond_head(client_fd, 404, "Not Found", "text/html", -1);
     return;
   } else {
     if (S_ISDIR(st.st_mode)) {
@@ -213,11 +210,65 @@ void http_request(const char* request, int client_fd) {
       send_file(client_fd, file_path);
     }
   }
-
 }
 
+void send_respond_head(int client_fd, int status, char *desp, char *type,
+                       long length) {
+  char buf[MAX_CLIENTS];
 
-void send_respond_head(int client_fd, int status, char* desp, char* type, long length) {
+  sprintf(buf, "HTTP/1.1 %d %s\r\n", status, desp);
+  send(client_fd, buf, strlen(buf), 0);
 
+  sprintf(buf, "Content-Type  %s\r\n", type);
+  send(client_fd, buf, strlen(buf), 0);
 
+  sprintf(buf, "Content-Length %ld\r\n", length);
+  send(client_fd, buf, strlen(buf), 0);
+
+  sprintf(buf, "\r\n");
+  send(client_fd, buf, strlen(buf), 0);
+}
+
+// send file
+void send_file(int client_fd, const char *filename) {
+  int file_fd = open(filename, O_RDONLY);
+
+  if (-1 == file_fd) {
+    send_respond_head(client_fd, 404, "Not Found", "text/html", -1);
+    exit(EXIT_FAILURE);
+  }
+
+  char buf[4096];
+
+  int ret = 0;
+  while ((ret = read(file_fd, buf, sizeof(buf))) > 0) {
+    send(client_fd, buf, ret, 0);
+  }
+
+  if (-1 == ret) {
+    perror("read error");
+    exit(EXIT_FAILURE);
+  }
+  close(client_fd);
+}
+
+// send dir
+void send_dir(int client_fd, const char *dirname) {
+  char file[1024] = {0};
+  char buf[4096] = {0};
+
+  sprintf(buf, "<html><head>目录名:%s</head></html>", dirname);
+  sprintf(buf + strlen(buf), "<body><h1>当前目录：%s</h1></body>", dirname);
+
+#if 1
+  DIR *dir = opendir(dirname);
+  struct dirent *ptr = NULL;
+  while((ptr = readdir(dir)) != NULL) {
+    char *filename = ptr->d_name;
+
+    // 拼接文件的完整路径
+    sprintf(file, "%s/%s", dirname, filename);
+  }  
+
+#endif
 }
