@@ -309,7 +309,6 @@ void send_dir(int client_fd, const char *dirname) {
 #endif
 }
 
-
 // 16进制转为10进制
 int hexit(char c) {
   if (c >= '0' && c <= '9') {
@@ -324,3 +323,48 @@ int hexit(char c) {
 
   return 0;
 }
+
+/*
+ *  这里的内容是处理%20之类的东西！是"解码"过程。
+ *  %20 URL编码中的‘ ’(space)
+ *  %21 '!' %22 '"' %23 '#' %24 '$'
+ *  %25 '%' %26 '&' %27 ''' %28 '('......
+ *  相关知识html中的‘ ’(space)是&nbsp
+ */
+void encode_str(char *to, int tosize, const char *from) {
+  int to_len;
+
+  for (to_len = 0; *from != '\0' && to_len + 4 < tosize; ++from) {
+    if (isalnum(*from) || strchr("/_.-~", *from) != (char *)0) {
+      *to = *from;
+      ++to;
+      ++to_len;
+    } else {
+      sprintf(to, "%%%02x", (int)*from & 0xff);
+      to +=3;
+      to_len += 3;
+    }
+  }
+  *to = '\0';
+}
+
+
+void decode_str(char* to, char* from) {
+  for(; *from != '\0'; ++to, ++from) {
+    if (from[0] == '%' && isxdigit(from[1]) && isxdigit(from[2])) {
+      *to = hexit(from[1]) * 16 + hexit(from[2]);
+      from += 2;
+    } else {
+      *to = *from;
+    }
+  }
+
+  *to = '\0';
+}
+
+
+// 通过文件名获取文件的类型
+const char *get_file_type(const char* name) {
+
+}
+
