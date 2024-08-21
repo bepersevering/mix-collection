@@ -270,7 +270,7 @@ void send_dir(int client_fd, const char *dirname) {
   char enstr[1024] = {0};
 
   struct dirent *ptr = NULL;
-  while((ptr = readdir(dir)) != NULL) {
+  while ((ptr = readdir(dir)) != NULL) {
     char *filename = ptr->d_name;
 
     // 拼接文件的完整路径
@@ -288,11 +288,39 @@ void send_dir(int client_fd, const char *dirname) {
 
     // 如果是文件
     if (S_ISREG(st.st_mode)) {
-      
+      sprintf(buf + strlen(buf),
+              "<tr><td><a href=\"%s\">%s</a></td><td>%ld</td></tr>", enstr,
+              filename, (long)st.st_size);
+    }
+    // 如果是目录
+    if (S_ISDIR(st.st_mode)) {
+      sprintf(buf + strlen(buf),
+              "<tr><td><a href=\"%s/\">%s/</a></td><td>%ld</td></tr>", enstr,
+              filename, (long)st.st_size);
     }
 
-  }  
-
+    send(client_fd, buf, sizeof(buf), 0);
+    // memset(buf, 0, sizeof(buf));
+    bzero(buf, sizeof(buf));
+  }
+  sprintf(buf + strlen(buf), "</table></body></html>");
+  send(client_fd, buf, sizeof(buf), 0);
 
 #endif
+}
+
+
+// 16进制转为10进制
+int hexit(char c) {
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  }
+  if (c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
+  }
+  if (c >= 'A' && c <= 'F') {
+    return c - 'A' + 10;
+  }
+
+  return 0;
 }
