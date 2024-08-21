@@ -341,16 +341,15 @@ void encode_str(char *to, int tosize, const char *from) {
       ++to_len;
     } else {
       sprintf(to, "%%%02x", (int)*from & 0xff);
-      to +=3;
+      to += 3;
       to_len += 3;
     }
   }
   *to = '\0';
 }
 
-
-void decode_str(char* to, char* from) {
-  for(; *from != '\0'; ++to, ++from) {
+void decode_str(char *to, char *from) {
+  for (; *from != '\0'; ++to, ++from) {
     if (from[0] == '%' && isxdigit(from[1]) && isxdigit(from[2])) {
       *to = hexit(from[1]) * 16 + hexit(from[2]);
       from += 2;
@@ -362,9 +361,26 @@ void decode_str(char* to, char* from) {
   *to = '\0';
 }
 
-
 // 通过文件名获取文件的类型
-const char *get_file_type(const char* name) {
+const char *get_file_type(const char *name) {
+  char *dot;
+  // 自右向左查找'.'字符，如果不存在返回NULL
+  dot = strrchr(name, '.');
+
+  if (dot == NULL) {
+    return "text/plain; charset=utf-8";
+  }
+  if (strcmp(dot, ".html") == 0 || strcmp(dot, ".htm") == 0) {
+    return "text/html; charset=utf-8";
+  }
+  if (strcmp(dot, ".jpg") == 0 || strcmp(dot, ".jpeg") == 0) {
+    return "image/jpeg";
+  }
+  if (strcmp(dot, ".gif") == 0 || strcmp(dot, ".gif") == 0) {
+    return "image/gif";
+  }
+
+
+  return "text/plain; charset=utf-8";
 
 }
-
