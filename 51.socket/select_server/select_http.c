@@ -89,6 +89,12 @@ void select_run(int port) {
         perror("accept error");
         continue;
       }
+      // 打印客户端信息
+      char ip[64] = {0};
+
+      printf("New Client IP: %s, Port: %d, client_fd = %d\n",
+             inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, ip, sizeof(ip)),
+             ntohs(client_addr.sin_port), client_fd);
 
       // 将client_fd放到client未使用的里面
       for (i = 0; i < FD_SETSIZE; i++) {
@@ -187,7 +193,7 @@ void disconnect(int client_fd) { close(client_fd); }
 void http_request(const char *request, int client_fd) {
   char method[12], path[1024], port[12];
 
-  scanf(request, "%[^ ] %[^ ] %[^ ]", method, path, port);
+  sscanf(request, "%[^ ] %[^ ] %[^ ]", method, path, port);
 
   // 判断是不是GET请求
   if (strcasecmp(method, "GET") != 0) {
@@ -380,7 +386,5 @@ const char *get_file_type(const char *name) {
     return "image/gif";
   }
 
-
   return "text/plain; charset=utf-8";
-
 }
