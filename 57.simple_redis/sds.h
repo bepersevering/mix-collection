@@ -1,7 +1,6 @@
 #ifndef __SDS_H
 #define __SDS_H
 
-#include <cstddef>
 #include <sys/types.h>
 
 typedef char *sds;
