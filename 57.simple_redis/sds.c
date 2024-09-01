@@ -265,7 +265,6 @@ void sdstoupper(sds s) {
   }
 }
 
-
 int sdscmp(sds s1, sds s2) {
   size_t l1, l2, minlen;
   int cmp;
@@ -275,13 +274,102 @@ int sdscmp(sds s1, sds s2) {
   minlen = l1 > l2 ? l2 : l1;
 
   cmp = memcmp(s1, s2, minlen);
-  if (cmp == 0) return l1 - l2;
+  if (cmp == 0)
+    return l1 - l2;
 
   return cmp;
 }
 
-
+/**
+ * Split 's' with separator in 'sep'. An array
+ * of sds strings is returned. *count while be set
+ * by reference to the number of tokens returned.
+ *
+ * On out of memory, zero length string, zero length
+ * separator, NULL is returned.
+ *
+ * Note that 'sep' is able to split a string using a
+ * multi-character separator. For example sdssplit("foo_-_bar", "_-_");
+ * will return two elements "foo" and "bar".
+ * This version of the function is binary-safe but
+ * requires length arguments, sdssplit() is just the
+ * same function but for zero-terminated strings.
+ */
 sds *sdssplitlen(char *s, int len, char *sep, int seplen, int *count) {
 
+  int elements = 0, slots = 5, start = 0, j;
+
+  sds *tokens = zmalloc(sizeof(sds) * slots);
+
+#ifdef SDS_ABORT_ON_OOM
+  if (tokens == NULL) {
+    sdsOomAbort();
+  }
+#endif
+  if (seplen < 1 || len < 0 || tokens == NULL) {
+    return NULL;
+  }
+
+  for (j = 0; j < (len - (seplen - 1)); j++) {
+    /* make sure there is room for the next element and the final one */
+    if (slots < elements + 2) {
+      sds *newtokens;
+      slots *= 2;
+
+      newtokens = zrealloc(tokens, sizeof(sds) * slots);
+
+      if (newtokens == NULL) {
+#ifndef SDS_ABORT_ON_OOM
+        sdsOomAbort();
+#else
+        goto cleanup;
+#endif
+      }
+      tokens = newtokens;
+    }
+
+    /* search the separator */
+
+    if ((seplen == 1 && *(s + j) == sep[0]) ||
+        (memcmp(s + j, sep, seplen) == 0)) {
+      tokens[elements] = sdsnewlen(s + start, j - start);
+      if (tokens[elements] == NULL) {
+#ifndef SDS_ABORT_ON_OOM
+        sdsOomAbort();
+#else
+        goto cleanup;
+#endif
+      }
+      elements++;
+      start = j + seplen;
+      j = j + seplen - 1; /* skip the separator */
+    }
+  }
+
+  /* add the final element. we are sure there is room in the tokens array. */
+
+  tokens[elements] = sdsnewlen(s + start, len - start);
+  if (tokens[elements] == NULL) {
+#ifndef SDS_ABORT_ON_OOM
+    sdsOomAbort();
+#else
+    goto cleanup;
+#endif
+  }
+  elements++;
+  *count = elements;
+  return tokens;
+#ifndef SDS_ABORT_ON_OOM
+cleanup: {
+  int i;
+  for (i = 0; i < elements; i++) {
+    sdsfree(tokens[i]);
+    zfree(tokens);
+    return NULL;
+  }
 }
 
+#endif
+
+  return NULL;
+}
