@@ -12,7 +12,7 @@
 #define PORT 6369
 #define MAX_EVENTS 10
 #define BUFFER_SIZE 1024
-#define TABLE_SIZE 1000
+#define TABLE_SIZE 1024
 
 /**
  * data entry
@@ -61,10 +61,69 @@ void set(const char *key, const char *value) {
   hashTable[index] = newEntry;
 }
 
-
-char *get(const char* key) {
+char *get(const char *key) {
   unsigned int index = hash(key);
+  Entry *entry = hashTable[index];
 
+  while (entry != NULL) {
+    if (strcmp(key, entry->key) == 0) {
+      return entry->value;
+    }
+  }
 
   return NULL;
+}
+
+void delete(const char *key) {
+  unsigned int index = hash(key);
+
+  Entry *entry = hashTable[index];
+  Entry *prev = NULL;
+
+  while (entry != NULL) {
+    if (strcmp(key, entry->key) == 0) {
+      if (prev == NULL) {
+        hashTable[index] = entry->next;
+      } else {
+        prev->next = entry->next;
+      }
+      free(entry->key);
+      free(entry->value);
+      free(entry);
+
+      return;
+    }
+
+    prev = entry;
+    entry = entry->next;
+  }
+}
+
+// set no block
+int set_nonblocking(int sockfd) {
+  // get old
+  int flags = fcntl(sockfd, F_GETFL, 0);
+
+  if (flags == -1)
+    return -1;
+  flags = flags | O_NONBLOCK;
+
+  return fcntl(sockfd, F_SETFL, flags);
+}
+
+// handle client request
+void handle_client_request(int client_fd) {
+  char buffer[BUFFER_SIZE];
+
+  bzero(buffer, BUFFER_SIZE);
+
+  ssize_t n = read(client_fd, buffer, BUFFER_SIZE - 1);
+
+  if (n <= 0) {
+    if (n < 0) {
+      perror("read");
+      close(client_fd);
+      return;
+    }
+  }
 }
