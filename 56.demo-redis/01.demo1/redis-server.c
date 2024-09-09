@@ -126,4 +126,31 @@ void handle_client_request(int client_fd) {
       return;
     }
   }
+
+  buffer[n] = '\0';
+
+  // parse command
+  char command[BUFFER_SIZE], key[BUFFER_SIZE], value[BUFFER_SIZE];
+
+  if (sscanf(buffer, "SET %s %s", key, value) == 2) {
+    set(key, value);
+    write(client_fd, "OK\n", 3);
+  } else if (sscanf(buffer, "GET %s", key) == 1) {
+    char *result = get(key);
+    if (result) {
+      write(client_fd, result, strlen(result));
+      write(client_fd, "\n", 1);
+    } else {
+      write(client_fd, "(nil)", 6);
+    }
+  } else if (sscanf(buffer, "DELETE %s", key) == 1) {
+    delete(key);
+    write(client_fd, "OK", 3);
+  } else {
+    write(client_fd, "Unknown command\n", 16);
+  }
+}
+
+int main(int argc, char** argv) {
+
 }
