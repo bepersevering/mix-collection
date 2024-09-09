@@ -8,6 +8,7 @@ GET k
 DELETE k
 
 #v0.0.2
+EXPIRE k time
 
 
 #v0.0.3
