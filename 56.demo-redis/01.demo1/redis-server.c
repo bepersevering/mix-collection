@@ -215,13 +215,22 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; i < nfds; i++) {
-      if (events[i].data.fd = server_fd) {
-        // accept new clietn
-        int clietn_fd = accept(server_fd, NULL, NULL);
-        if (clietn_fd == -1) {
+      if (events[i].data.fd == server_fd) {
+        // accept new client
+        int client_fd = accept(server_fd, NULL, NULL);
+        if (client_fd == -1) {
           perror("accept");
           continue;
         }
+
+        set_nonblocking(client_fd);
+        ev.events = EPOLLIN | EPOLLET; // 边缘触发
+        ev.data.fd = client_fd;
+
+        epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
+      } else {
+        // handle client request
+        handle_client_request(events[i].data.fd);
       }
     }
   }
