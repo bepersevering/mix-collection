@@ -30,3 +30,23 @@ CDate::~CDate() {
     delete[] str;
     cout << "Calling Destructor" << endl;
 }
+
+int main() {
+    {
+        cout << "Call date Constructor" << endl;
+        CDate data = CDate(2025, 1, 3);
+        data.show();
+        cout << "Call date Destructor" << endl;
+    }
+
+    cout << endl;
+
+    cout << "Call pDate Constructor" <<endl;
+    CDate *pDate = new CDate(2025, 1, 3);
+    pDate->show();
+    cout << "Call pDate Destructor" << endl;
+
+    delete pDate;
+
+    return 0;
+}
