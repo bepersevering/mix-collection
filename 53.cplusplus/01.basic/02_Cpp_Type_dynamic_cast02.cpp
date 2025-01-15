@@ -17,6 +17,7 @@ int main() {
     Derived derived_obj;
     Base &ref_base = derived_obj;
 
+
     try {
         // 将基类引用转换为派生对象
         Derived& ref_derived = dynamic_cast<Derived&> (ref_base);
