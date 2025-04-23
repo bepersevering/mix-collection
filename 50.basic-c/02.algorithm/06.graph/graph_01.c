@@ -98,7 +98,51 @@ void addEdge(Graph* graph, int src, int dest) {
     graph->adjLists[dest] = destNode;
 }
 
+// BFS traversal from a given source vertex
+int* bfs(Graph* graph, int start, int* visitOrder, int* visitCount) {
+    // Mark all vertices as not visited
+    bool* visited = (bool*)malloc(graph->numVertices * sizeof(bool));
 
+    for (int i = 0; i < graph->numVertices; i++) {
+        visited[i] = false;
+    }
+
+    // create a queue for bfs
+    Queue *queue = createQueue(graph->numVertices);
+
+    // Mark the current node as visited and enqueue it
+    visited[start] = true;
+    enqueue(queue, start);
+
+    *visitCount = 0;
+
+    // BFS loop
+    while (!isEmpty(queue)) {
+        // dequeue a vertex and add to visit order
+        int currentVertex = dequeue(queue);
+        visitOrder[(*visitCount)++] = currentVertex;
+
+        // get all adjacent vertices of the dequeue vertex
+        // If an adjacent hasn't been visited, mark it visited and enqueue it
+        Node *temp = graph->adjLists[currentVertex];
+
+        while(temp) {
+            int adjVertex = temp->vertex;
+            if (!visited[adjVertex]) {
+                visited[adjVertex] = true;
+                enqueue(queue, adjVertex);
+            }
+            temp = temp->next;
+        }
+    
+    }
+
+    free(visited);
+    free(queue->array);
+    free(queue);
+
+    return visitOrder;
+}
 
 
 
