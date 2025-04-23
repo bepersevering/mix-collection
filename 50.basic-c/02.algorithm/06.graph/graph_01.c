@@ -45,8 +45,62 @@ void enqueue(Queue *queue, int item) {
     }
 
     queue->rear = (queue->rear + 1) % queue->capacity;
-    
+    queue->array[queue->rear] = item;
+    queue->size += 1;
 }
+
+// 出队
+int dequeue(Queue* queue) {
+    if (isEmpty(queue)) {
+        return -1;
+    }
+
+    int item = queue->array[queue->front];
+    queue->front = (queue->front + 1) % queue->capacity;
+    queue->size -= 1;
+
+    return item;
+}
+
+
+// create a node
+Node* createNode(int v) {
+    Node* node = (Node*)malloc(sizeof(Node));
+
+    node->vertex = v;
+    node->next = NULL;
+    return node;
+}
+
+// create a graph with n vertices
+Graph* createGraph(int n) {
+    Graph *graph = (Graph*)malloc(sizeof(Graph));
+
+    graph->numVertices = n;
+    graph->adjLists = (Node**)malloc(n*sizeof(Node*));
+    for (int i = 0; i < n; i++) {
+        graph->adjLists[i] = NULL;
+    }
+
+    return graph;
+}
+
+// add edge to undirected graph
+void addEdge(Graph* graph, int src, int dest) {
+    // add edge from src to dest
+    Node* srcNode = createNode(src);
+    srcNode->next = graph->adjLists[src];
+    graph->adjLists[src] = srcNode;
+
+    
+    Node* destNode = createNode(dest);
+    destNode->next = graph->adjLists[dest];
+    graph->adjLists[dest] = destNode;
+}
+
+
+
+
 
 
 
