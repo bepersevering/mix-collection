@@ -146,7 +146,43 @@ int* bfs(Graph* graph, int start, int* visitOrder, int* visitCount) {
 
 
 
+void test() {
+    int numVertices = 5;
 
+    Graph* graph = createGraph(numVertices);
+
+    // add edges
+    addEdge(graph, 0, 1);
+    addEdge(graph, 0, 4);
+    addEdge(graph, 1, 2);
+    addEdge(graph, 1, 3);
+    addEdge(graph, 1, 4);
+    addEdge(graph, 2, 3);
+    addEdge(graph, 3, 4);
+
+    int* visitOrder = (int*)malloc(numVertices*sizeof(int));
+    
+    int visitCount = 0;
+
+    visitOrder = bfs(graph, 0, visitOrder, &visitCount);
+    
+    printf("BFS traversal starting from vertex 0: ");
+    
+    for (int i = 0; i < visitCount; i++) {
+        printf("%d ", visitOrder[i]);
+    }
+
+    printf("\n");
+    
+    free(visitOrder);
+
+}
+
+
+int main() {
+    test();
+    return 0;
+}
 
 
 
