@@ -17,7 +17,6 @@ void save_to_file(const char *message) {
     }
 }
 
-
 // 异步性：模拟耗时的任务
 void async_task(int id) {
     printf("任务 %d 开始(异步执行)\n", id);
@@ -42,9 +41,9 @@ void async_task(int id) {
 
 // 并发性：线程函数
 void *thread_function(void *arg) {
-    int id = *(int*)arg;
+    int id = *(int *)arg;
 
-    free(arg);  // 释放动态分配的内存
+    free(arg); // 释放动态分配的内存
 
     async_task(id);
 
@@ -70,15 +69,14 @@ int main() {
         int *id = malloc(sizeof(int));
 
         *id = i + 1;
-        
+
         // 创建线程
         pthread_create(&threads[i], NULL, thread_function, id);
-
     }
 
     // 主线程也执行一些工作
     printf("主线程正在执行其他工作...\n");
-    sleep(2);  // 模拟主线程工作
+    sleep(2); // 模拟主线程工作
     printf("主线程工作完成\n");
 
     // 等待所有线程完成
